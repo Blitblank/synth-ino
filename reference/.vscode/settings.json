@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "esp_system.h": "c",
+        "string.h": "c",
+        "oled.h": "c"
+    }
+}

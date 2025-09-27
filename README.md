@@ -8,9 +8,17 @@ Board characteristics:
   - SPI MicroSD storage for storing synthesizer voice profiles and wifi network info
   - MCP23017 I2C I/O expander for extra control potentiometers and status LEDs
   - Native USB
-  - WS2812b LEDs and interface because I got bored 
+  - WS2812b LEDs and interface because I got bored
+
+The ESP32 offers WiFi capabilities, which this project uses for a control interface instead of hardware circuitry.
+The dual cores of the S3 module allows the synthesizer task to be isolated so that it is not blocked by other tasks (web server, scope, etc.)
 
 Firmware stack: FreeRTOS >> ESP-IDF >> Arduino
+
 Utilizing PlatformIO for build system and chip interfacing 
 
+Future plans for soburg_v3: 
+  - USB MIDI interface (through UART conversion)
+  - ADC -> I2S conversion input for live sound modification effects
 
+This synthesizer isn't very good, but it's neat :3 

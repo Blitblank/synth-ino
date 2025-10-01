@@ -16,11 +16,7 @@ public:
     ~Synth() = default;
 
     void init() {}
-    void update() {}
-
-    // audio constants
-    const uint32_t sampleRate = 44100;
-    const uint32_t bufferLength = 512;
+    void update(int32_t* buffer, uint32_t bufferLength) {}
 
 private:
 

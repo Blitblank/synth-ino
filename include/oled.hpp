@@ -22,12 +22,14 @@ public:
     ~Oled() = default;
 
     void init();
-    void update(int32_t* i2sBuffer);
+    void draw(int32_t* i2sBuffer, uint32_t bufferLength);
 
 private:
 
     Adafruit_SSD1306 display;
     
     void i2cInit(uint8_t address, uint8_t pinSDA, uint8_t pinSCL);
+
+    uint8_t last_y[128] = {0};
 
 };

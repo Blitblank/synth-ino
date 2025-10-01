@@ -16,7 +16,7 @@ void Oled::init() {
 
 }
 
-void Oled::update(int32_t* i2sBuffer) {
+void Oled::draw(int32_t* i2sBuffer, uint32_t bufferLength) {
 
     // 21.5 ms per write, max 46.5 fps at i2c = 700kHz
     // too slow to run on same core as the synth but fast enough to run conncurent with io, wifi, etc
@@ -62,7 +62,7 @@ void Oled::update(int32_t* i2sBuffer) {
     display.display(); // flush buffer to device over i2c
 }
 
-void i2cInit(uint8_t address, uint8_t pinSDA, uint8_t pinSCL) {
+void Oled::i2cInit(uint8_t address, uint8_t pinSDA, uint8_t pinSCL) {
 
     bool success = true;
     if(!Wire.begin()) success = false;

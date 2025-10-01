@@ -1,20 +1,17 @@
 
 #pragma once
 
-#include <stdatomic.h>
+#include <atomic>
 
 #include "synth.hpp"
 #include "state.hpp"
 #include "wifiManager.hpp"
 #include "oled.hpp"
 #include "utils.h"
+#include <driver/i2s.h>
 
 // TODO: I'd like this to be somewhere else, maybe an i2s manager class. next option is in the synth class
-#define I2S_BUFFER_LENGTH 512
-#define SAMPLE_BYTES sizeof(int32_t)
-#define BUFFER_BYTES (I2S_BUFFER_LEN * SAMPLE_BYTES)
-#define I2S_NUM 0
-#define I2S_SAMPLE_RATE 44100
+
 
 class App {
 public:
@@ -37,7 +34,7 @@ private:
     static void audioTaskTrampoline(void* args);
     static void ioTaskTrampoline(void* args);
 
-    static void IRAM_ATTR i2sDmaIsr(void* args); // buffer swap reporter
+    static void IRAM_ATTR i2sDmaIsr(void* arg); // buffer swap reporter
     void i2sInit(); // TODO: also move this somewhere else I think
 
     // member classes
@@ -45,14 +42,22 @@ private:
     Oled oled;
     Synth synth;
 
-    // for i2s. synth class writes to this and the oled class reads
-    int32_t i2sBufferA[I2S_BUFFER_LENGTH] = {0};
-    int32_t i2sBufferB[I2S_BUFFER_LENGTH] = {0};
-    // if i2s gets moved move this elsewhere too
+    static std::atomic<int32_t> activeBuffer; // current i2s buffer to read
+    static std::atomic<bool> bufferReady;
 
-    static constexpr atomic_uint_fast8_t frontIndex = 0; // current i2s buffer to read
-    static constexpr atomic_uint_fast32_t bufferSequence = 0;
-    static constexpr TaskHandle_t oledTaskHandle = NULL; // for reading
-    static constexpr intr_handle_t i2sIsrHandle = NULL; // for reporting buffer swaps
+    // audio parameters
+    static constexpr uint32_t i2sBufferLength = 512;
+    static constexpr uint32_t sampleBytes = sizeof(int32_t);
+    static constexpr uint32_t bufferBytes = i2sBufferLength * sampleBytes;
+    static constexpr uint32_t i2sSampleRate = 44100;
+    static constexpr uint32_t dmaBufferCount = 2;
+    static intr_handle_t i2sIntrHandle;
+
+    i2s_port_t i2sPort = I2S_NUM_0;
+
+    // for i2s. synth class writes to this and the oled class reads
+    int32_t i2sBufferA[i2sBufferLength] = {0};
+    int32_t i2sBufferB[i2sBufferLength] = {0};
+    // if i2s gets moved move this elsewhere too
 
 };

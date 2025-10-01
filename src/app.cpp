@@ -6,12 +6,16 @@
 #include "freertos/queue.h"
 #include "Arduino.h"
 #include "tasks.h"
+#include <driver/i2s.h>
 
 App::App() {
 
 }
 
 void App::init() {
+
+    activeBuffer = 0;
+    bufferReady = true;
 
     Serial.begin(115200);
     utils::serialLog(appTaskHandle, xTaskGetTickCount(), "App init.");
@@ -52,19 +56,12 @@ void App::audioTask() {
 
     while(1) {
 
-        // for determining which buffer (A or B) is currently the front
-        uint8_t front = (uint8_t)atomic_load_explicit(&frontIndex, memory_order_acquire);
-        int32_t* backBuffer = (front ^ 1) ? i2sBufferA : i2sBufferB; // whichever is the back buffer is the one available for writing
+        vTaskDelay(1);
+        if(!bufferReady.load(std::memory_order_acquire)) continue; // in the middle of a swap or something
 
-        uint32_t start = xTaskGetTickCount(); // time profiling
-        synth.update(backBuffer, I2S_BUFFER_LENGTH); //probably rename this to "synth.writeI2S" or similar
-        uint32_t end = xTaskGetTickCount();
-
-        // Queue it to I2S DMA for playback
-        size_t bytes_written;
-        i2s_write(I2S_NUM, buffers[back], BUFFER_BYTES, &bytes_written, portMAX_DELAY);
-
-        // i2s dma interrupt triggers the callback to change frontIndex to the other buffer
+        int32_t inactive = activeBuffer.load(std::memory_order_acquire) ^ 1;
+        synth.update((inactive == 0) ? i2sBufferA : i2sBufferB, i2sBufferLength);
+        bufferReady.store(false, std::memory_order_release);
 
     }
 
@@ -78,17 +75,13 @@ void App::ioTask() {
 
     while(1) {
 
-        uint8_t front = (uint8_t)atomic_load_explicit(&frontIndex, memory_order_acquire);
-        uint32_t seq  = atomic_load_explicit(&bufferSequence, memory_order_relaxed);
-
-        // Read from buffers[front]; ISR never writes this one
-        int32_t* frontBuffer = (front) ? i2sBufferA : i2sBufferB; // whichever is the front buffer is the one available for reading
+        int32_t front = activeBuffer.load(std::memory_order_acquire);
 
         uint32_t start = xTaskGetTickCount(); // time profiling
-        oled.update(frontBuffer); // TODO: need some error checking here
+        oled.draw((front) ? i2sBufferA : i2sBufferB, i2sBufferLength); // TODO: need some error checking here
         uint32_t end = xTaskGetTickCount();
 
-        vTaskDelay(10); // ms
+        vTaskDelay(40); // ms
     }
 
 }
@@ -108,51 +101,46 @@ void App::ioTaskTrampoline(void* args) {
     self->ioTask();
 }
 
-void IRAM_ATTR App::i2sDmaIsr(void* args) {
-    BaseType_t hp_task_woken = pdFALSE;
+void IRAM_ATTR App::i2sDmaIsr(void* arg) {
+    // this isr is called when the i2s dma finishes reading a buffer
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    activeBuffer.store(activeBuffer.load(std::memory_order_relaxed) ^ 1, std::memory_order_release); //swap active buffer
+    bufferReady.store(true, std::memory_order_release); // tag for read capability
 
-    // swap buffers
-    uint8_t front = (uint8_t)atomic_load_explicit(&front_idx, memory_order_acquire);
-    uint8_t back  = front ^ 1;
+    // this clears interrupt in hardware
+    I2S0.int_clr.tx_done = 1;
 
-    // Here you can optionally copy/convert DMA data into buffers[back]
-    // If the DMA already wrote into buffers[back], just swap
-
-    // publish to the atomic variables
-    atomic_store_explicit(&frontIndex, back, memory_order_release);
-    atomic_fetch_add_explicit(&bufferSequence, 1, memory_order_relaxed);
-
-    // Clear interrupt flags as needed by driver
-    // (depends on specific I2S/DMA config)
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
 void App::i2sInit() {
 
-    i2s_config_t cfg = {
-        .mode = I2S_MODE_MASTER | I2S_MODE_TX,
-        .sample_rate = I2S_SAMPLE_RATE,
+    i2s_config_t i2sConfig = {
+        .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
+        .sample_rate = i2sSampleRate,
         .bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT,
         .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT, // mono (left) for now
         .communication_format = I2S_COMM_FORMAT_I2S_MSB,
-        .dma_buf_count = 2, // <-- dma buffers A and B
-        .dma_buf_len = BUFFER_LEN / 2, // <-- dunno why this needs to be halved
-        .use_apll = false
+        .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+        .dma_buf_count = dmaBufferCount,
+        .dma_buf_len = i2sBufferLength, 
+        .use_apll = false,
+        .tx_desc_auto_clear = true,
+        .fixed_mclk = 0
     };
 
-    i2s_pin_config_t pins = {
-        .bck_io_num = 26,
+    i2s_pin_config_t pinConfig = {
+        .bck_io_num = 26, // TODO: CHANGE THESE
         .ws_io_num  = 25,
         .data_out_num = 22,
         .data_in_num = I2S_PIN_NO_CHANGE
     };
 
-    ESP_ERROR_CHECK(i2s_driver_install(I2S_NUM, &cfg, 0, NULL));
-    ESP_ERROR_CHECK(i2s_set_pin(I2S_NUM, &pins));
+    ESP_ERROR_CHECK(i2s_driver_install(i2sPort, &i2sConfig, 0, NULL));
+    ESP_ERROR_CHECK(i2s_set_pin(i2sPort, &pinConfig));
 
-    // interrupt service routine (ISR) that 
-    ESP_ERROR_CHECK(esp_intr_alloc(ETS_I2S0_INTR_SOURCE, // i2s interface number
-                                   ESP_INTR_FLAG_IRAM | ESP_INTR_FLAG_LEVEL1, 
-                                   i2sDmaIsr, // isr callback function
-                                   NULL,
-                                   &i2sIsrHandle)); // 
+    // interrupt service routine 
+    esp_intr_alloc(ETS_I2S0_INTR_SOURCE, ESP_INTR_FLAG_IRAM, i2sDmaIsr, NULL, &i2sIntrHandle);
+
+    
 }

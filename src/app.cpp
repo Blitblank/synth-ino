@@ -12,6 +12,10 @@ App::App() {
 
 }
 
+std::atomic<int32_t> App::activeBuffer;
+std::atomic<bool> App::bufferReady;
+intr_handle_t App::i2sIntrHandle;
+
 void App::init() {
 
     activeBuffer = 0;

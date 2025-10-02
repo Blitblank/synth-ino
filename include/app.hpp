@@ -44,6 +44,7 @@ private:
 
     static std::atomic<int32_t> activeBuffer; // current i2s buffer to read
     static std::atomic<bool> bufferReady;
+    static intr_handle_t i2sIntrHandle;
 
     // audio parameters
     static constexpr uint32_t i2sBufferLength = 512;
@@ -51,7 +52,7 @@ private:
     static constexpr uint32_t bufferBytes = i2sBufferLength * sampleBytes;
     static constexpr uint32_t i2sSampleRate = 44100;
     static constexpr uint32_t dmaBufferCount = 2;
-    static intr_handle_t i2sIntrHandle;
+
 
     i2s_port_t i2sPort = I2S_NUM_0;
 

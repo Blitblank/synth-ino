@@ -1,14 +1,17 @@
 
 #pragma once
 
+#include <stdint.h>
+#include <cstddef>
+
 class Oscillator {
 public:
-    Oscillator() {}
+    Oscillator();
     ~Oscillator() = default;
 
-    void init() {}
-    int32_t sample() {}
-    int32_t mix(Oscillator* oscillators, size_t count) {}
+    void init();
+    int32_t sample();
+    int32_t mix(Oscillator* oscillators, size_t count);
 
 private:
 
@@ -23,9 +26,9 @@ private:
     size_t wavetableSize;
     float relativeVolume;
 
-    uint32_t floatToQ31(float f) {}
+    uint32_t floatToQ31(float f);
 
-    int32_t sampleWavetable(const int32_t* wavetable, uint32_t x) {} // interpolates between wavetable samples 
-    int32_t fsampleWavetable(const int32_t* wavetable, uint32_t x) {} // floors the index (no interpolation), less precise
+    int32_t sampleWavetable(const int32_t* wavetable, uint32_t x); // interpolates between wavetable samples 
+    int32_t fsampleWavetable(const int32_t* wavetable, uint32_t x); // fast version. floors the index (no interpolation), less precise
     
 };

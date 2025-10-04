@@ -67,6 +67,8 @@ void App::audioTask() {
         synth.update((inactive == 0) ? i2sBufferA : i2sBufferB, i2sBufferLength);
         bufferReady.store(false, std::memory_order_release);
 
+        // TODO: performance profiling of the synth generation
+        // first thing to see is compiler optimization for performance (-O2)
     }
 
 }

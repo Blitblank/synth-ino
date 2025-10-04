@@ -18,15 +18,13 @@ void Oled::init() {
 
 void Oled::draw(int32_t* i2sBuffer, uint32_t bufferLength) {
 
-    // 21.5 ms per write, max 46.5 fps at i2c = 700kHz
-    // too slow to run on same core as the synth but fast enough to run conncurent with io, wifi, etc
-    // i was able to get i2c up to 1.4MHz for 69fps
+    // TODO: profile speed of this function
 
     // these need to be externally passed through
     volatile uint32_t scopeWavelength = 578263587;
     volatile uint32_t scopeTrigger = 237734124;
 
-    uint32_t stride = (scopeWavelength << 16) / 128;
+    uint32_t stride = (scopeWavelength << (16 + 7));
     uint32_t phase = scopeTrigger << 16;
 
     uint8_t prev_x = 0;

@@ -4,31 +4,37 @@
 #include <stdint.h>
 #include <cstddef>
 
+#define PHASE_PRECISION 20 // fixed point arithemetic for sampling wavetable (32-x.x) 
+// PHASE_PRECISION must be <= 32 - log2(WAVETABLE_SIZE)
+
 class Oscillator {
 public:
-    Oscillator();
+    Oscillator(float freq, uint32_t size, int32_t* wt1, int32_t* wt2, int32_t* wt3, uint32_t carrierInterp, uint32_t modDepth, float relVolume);
     ~Oscillator() = default;
+    
+    // TODO: profile performance on making these inline
+    int32_t sampleWavetable(const int32_t* wavetable, uint32_t x); // interpolates between wavetable samples 
+    int32_t fsampleWavetable(const int32_t* wavetable, uint32_t x); // fast version. floors the index (no interpolation), less precise
+    // if you want you can save generated audio to a .wav file on the sd card to qualify the difference 
+    // the precise version might be too slow to generate live (especially with multiple oscillators on multiple voices)
 
-    void init();
-    int32_t sample();
-    int32_t mix(Oscillator* oscillators, size_t count);
+    int32_t sample(); // returns a single audio sample at the current phase
+    void step(); // increments the phase by the set phase increment value
 
 private:
 
-    uint32_t phase; // internal for sampling wavetable 
-    uint32_t phase_inc; // determines pitch
-    // probably put the options here and calculate the pitch internally
+    float frequency;
+    uint32_t phase; // current wavetable sampling position
+    uint32_t phaseIncrement; // amount to move forward when sampling wavetable, determines pitch
     const int32_t *wavetable1; // carrier 1
     const int32_t *wavetable2; // carrier 2
     const int32_t *wavetable3; // modulator
-    uint32_t carrierInterpolation;
+    uint32_t carrierInterpolation; // waveform that 
     uint32_t modulationDepth;
-    size_t wavetableSize;
-    float relativeVolume;
+    uint32_t wavetableSize;
+    uint32_t wavetableMask;
+    float relativeVolume; // for mixing
 
     uint32_t floatToQ31(float f);
-
-    int32_t sampleWavetable(const int32_t* wavetable, uint32_t x); // interpolates between wavetable samples 
-    int32_t fsampleWavetable(const int32_t* wavetable, uint32_t x); // fast version. floors the index (no interpolation), less precise
     
 };

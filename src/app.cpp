@@ -7,6 +7,7 @@
 #include "Arduino.h"
 #include "tasks.h"
 #include <driver/i2s.h>
+#include "soc/i2s_struct.h"
 
 App::App() {
 
@@ -18,8 +19,8 @@ intr_handle_t App::i2sIntrHandle;
 
 void App::init() {
 
-    activeBuffer = 0;
-    bufferReady = true;
+    activeBuffer.store(0, std::memory_order_release);
+    bufferReady.store(true, std::memory_order_release);
 
     Serial.begin(115200);
     utils::serialLog(appTaskHandle, xTaskGetTickCount(), "App init.");
@@ -30,9 +31,9 @@ void App::init() {
 
 void App::main() {
 
-    xTaskCreate(&wifiTaskTrampoline, "WIFI_TASK", 4096, this, 7, NULL);
-    xTaskCreate(&audioTaskTrampoline, "AUDIO_TASK", 4096, this, 9, NULL);
-    xTaskCreate(&ioTaskTrampoline, "IO_TASK", 4096, this, 5, NULL);
+    xTaskCreatePinnedToCore(&wifiTaskTrampoline, "WIFI_TASK", 4096, this, 7, NULL, 0);
+    xTaskCreatePinnedToCore(&audioTaskTrampoline, "AUDIO_TASK", 4096, this, 9, NULL, 1);
+    xTaskCreatePinnedToCore(&ioTaskTrampoline, "IO_TASK", 4096, this, 5, NULL, 0);
 
 }
 
@@ -61,11 +62,23 @@ void App::audioTask() {
     while(1) {
 
         vTaskDelay(1);
-        if(!bufferReady.load(std::memory_order_acquire)) continue; // in the middle of a swap or something
 
-        int32_t inactive = activeBuffer.load(std::memory_order_acquire) ^ 1;
-        synth.update((inactive == 0) ? i2sBufferA : i2sBufferB, i2sBufferLength);
-        bufferReady.store(false, std::memory_order_release);
+        if(bufferReady.load(std::memory_order_acquire)) {
+            int32_t inactive = activeBuffer.load(std::memory_order_acquire) ^ 1;
+            int32_t* activeBuffer = (inactive == 0) ? i2sBufferA : i2sBufferB;
+            int32_t* inactiveBuffer = (inactive != 0) ? i2sBufferA : i2sBufferB;
+
+            synth.generate(activeBuffer, i2sBufferLength, &scopeWavelength, &scopeTrigger);
+
+            bufferReady.store(false, std::memory_order_release);
+            size_t bytesWritten;
+            i2s_write(i2sPort, inactiveBuffer, sizeof(i2sBufferA), &bytesWritten, portMAX_DELAY); // esp-idf function
+
+            Serial.printf("bytes_written: %d \n", bytesWritten);
+        } else {
+            Serial.printf("buffer wasn't ready :(");
+        }
+
 
         // TODO: performance profiling of the synth generation
         // first thing to see is compiler optimization for performance (-O2)
@@ -84,8 +97,10 @@ void App::ioTask() {
         int32_t front = activeBuffer.load(std::memory_order_acquire);
 
         uint32_t start = xTaskGetTickCount(); // time profiling
-        oled.draw((front) ? i2sBufferA : i2sBufferB, i2sBufferLength); // TODO: need some error checking here
+        oled.draw((front) ? i2sBufferA : i2sBufferB, i2sBufferLength, scopeWavelength, scopeTrigger);
         uint32_t end = xTaskGetTickCount();
+
+        //Serial.printf("time diff of oled.draw: %d \n", end-start);
 
         vTaskDelay(40); // ms
     }
@@ -111,7 +126,7 @@ void IRAM_ATTR App::i2sDmaIsr(void* arg) {
     // this isr is called when the i2s dma finishes reading a buffer
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     activeBuffer.store(activeBuffer.load(std::memory_order_relaxed) ^ 1, std::memory_order_release); //swap active buffer
-    bufferReady.store(true, std::memory_order_release); // tag for read capability
+    bufferReady.store(true, std::memory_order_release); // tag for read availability
 
     // this clears interrupt in hardware
     I2S0.int_clr.tx_done = 1;
@@ -136,17 +151,24 @@ void App::i2sInit() {
     };
 
     i2s_pin_config_t pinConfig = {
-        .bck_io_num = 26, // TODO: CHANGE THESE
-        .ws_io_num  = 25,
-        .data_out_num = 22,
+        .bck_io_num = 40, // TODO: add these to the pins.h file
+        .ws_io_num  = 38,
+        .data_out_num = 39,
         .data_in_num = I2S_PIN_NO_CHANGE
     };
 
     ESP_ERROR_CHECK(i2s_driver_install(i2sPort, &i2sConfig, 0, NULL));
     ESP_ERROR_CHECK(i2s_set_pin(i2sPort, &pinConfig));
 
-    // interrupt service routine 
-    esp_intr_alloc(ETS_I2S0_INTR_SOURCE, ESP_INTR_FLAG_IRAM, i2sDmaIsr, NULL, &i2sIntrHandle);
+    // Enable TX end-of-frame interrupt
+    I2S0.int_clr.val = 0xFFFFFFFF;
+    //I2S0.int_ena.out_eof = 1;
+    I2S0.int_ena.tx_done = 1;
+    I2S0.int_ena.out_total_eof = 1;
 
-    
+    // interrupt service routine 
+    ESP_ERROR_CHECK(esp_intr_alloc(ETS_I2S0_INTR_SOURCE, ESP_INTR_FLAG_IRAM, i2sDmaIsr, NULL, &i2sIntrHandle));
+
+    // Start I²S so DMA actually runs
+    ESP_ERROR_CHECK(i2s_start(i2sPort));
 }

@@ -16,19 +16,17 @@ void Oled::init() {
 
 }
 
-void Oled::draw(int32_t* i2sBuffer, uint32_t bufferLength) {
+void Oled::draw(int32_t* i2sBuffer, uint32_t bufferLength, uint32_t wavelength, uint32_t trigger) {
 
     // TODO: profile speed of this function
 
-    // these need to be externally passed through
-    volatile uint32_t scopeWavelength = 578263587;
-    volatile uint32_t scopeTrigger = 237734124;
-
-    uint32_t stride = (scopeWavelength << (16 + 7));
-    uint32_t phase = scopeTrigger << 16;
+    uint32_t stride = (wavelength << (16)) / 128;
+    uint32_t phase = trigger << 16;
 
     uint8_t prev_x = 0;
     uint8_t prev_y = 32;
+
+    display.clearDisplay();
 
     for (uint8_t x = 0; x < 128; x++) {
 
@@ -37,10 +35,9 @@ void Oled::draw(int32_t* i2sBuffer, uint32_t bufferLength) {
             ssd1306_set_pixel(device_handle, x, y, true); // sclear display
         }
         */
-        display.clearDisplay();
 
         uint32_t val = phase >> 16; // where to index the buffer so that the screen is scaled to one period
-        int32_t sample = i2sBuffer[val % 512];
+        int32_t sample = i2sBuffer[val % bufferLength];
 
         uint8_t y = 32 + (sample >> (24+2)); // scale [-2^31, 2^31-1] to [0, 63]
 
@@ -51,6 +48,7 @@ void Oled::draw(int32_t* i2sBuffer, uint32_t bufferLength) {
         //ssd1306_set_pixel(device_handle, x, y, false);
         if(x == 0) prev_y = y;
         display.writePixel(x, y, 1);
+
         prev_x = x;
         prev_y = y;
 
@@ -58,6 +56,7 @@ void Oled::draw(int32_t* i2sBuffer, uint32_t bufferLength) {
 
     }
     display.display(); // flush buffer to device over i2c
+
 }
 
 void Oled::i2cInit(uint8_t address, uint8_t pinSDA, uint8_t pinSCL) {

@@ -5,7 +5,7 @@
 
 class Filter {
 public:
-    Filter() {}
+    Filter();
     ~Filter() = default;
 
     void biquadCalculateLowpass(float cutoff, float q, float sampleRate);

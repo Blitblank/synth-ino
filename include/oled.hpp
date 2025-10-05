@@ -22,7 +22,7 @@ public:
     ~Oled() = default;
 
     void init();
-    void draw(int32_t* i2sBuffer, uint32_t bufferLength);
+    void draw(int32_t* i2sBuffer, uint32_t bufferLength, uint32_t wavelength, uint32_t trigger);
 
 private:
 

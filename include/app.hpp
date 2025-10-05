@@ -10,9 +10,6 @@
 #include "utils.h"
 #include <driver/i2s.h>
 
-// TODO: I'd like this to be somewhere else, maybe an i2s manager class. next option is in the synth class
-
-
 class App {
 public:
     App();
@@ -52,13 +49,15 @@ private:
     static constexpr uint32_t bufferBytes = i2sBufferLength * sampleBytes;
     static constexpr uint32_t i2sSampleRate = 44100;
     static constexpr uint32_t dmaBufferCount = 2;
-
-
     i2s_port_t i2sPort = I2S_NUM_0;
 
     // for i2s. synth class writes to this and the oled class reads
     int32_t i2sBufferA[i2sBufferLength] = {0};
     int32_t i2sBufferB[i2sBufferLength] = {0};
     // if i2s gets moved move this elsewhere too
+
+    // variables for sharing between classes that run on different tasks
+    uint32_t scopeTrigger = 0;
+    uint32_t scopeWavelength = 0;
 
 };

@@ -12,11 +12,12 @@
 
 class Synth {
 public:
-    Synth();
+    Synth() {}
+    Synth(uint32_t bufferSize, uint32_t audioRate);
     ~Synth() = default;
 
     void init();
-    void update(int32_t* buffer, uint32_t bufferLength);
+    void generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWavelength, uint32_t* scopeTrigger);
 
 private:
 
@@ -38,8 +39,8 @@ private:
     uint32_t phaseIncrements[128];
 
     // oscilloscope parameters
-    volatile uint32_t wavelength = 100;
-    volatile uint32_t trigger = 0;
+    uint32_t wavelength = 0;
+    uint32_t trigger = 0;
     uint32_t triggerOffset = 0;
 
     // voice
@@ -54,7 +55,7 @@ private:
 
     // control
     const float webControls[5] = {0.0f, 0.0f, 0.0f, 0.5f, 0.5f};
-    uint32_t wave_selectors[4] = {0, 1, 2, 3}; 
+    uint32_t waveSelectors[4] = {0, 1, 2, 3}; 
     // TODO: synth will get passed a parameters struct when generate() is called
     // parameters will contain everything configured from the control interface
 
@@ -63,7 +64,8 @@ private:
     // calculates the phase differences at each semitone needed to produce that specific frequency
     void initPhaseTable(); 
 
-    // writes a single sample to the i2sBuffer. might also change this ?
-    void i2sBufferWrite(uint32_t index, int32_t sample);
+    // audio configurations
+    uint32_t sampleRate = 0;
+    uint32_t bufferLength = 0; 
 
 };

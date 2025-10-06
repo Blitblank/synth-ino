@@ -54,7 +54,7 @@ private:
     // synth class will do it manually
 
     // control
-    const float webControls[5] = {0.0f, 0.0f, 0.0f, 0.5f, 0.5f};
+    const float webControls[5] = {0.0f, 0.0f, 0.0f, 1.0f, 1.0f};
     uint32_t waveSelectors[4] = {0, 1, 2, 3}; 
     // TODO: synth will get passed a parameters struct when generate() is called
     // parameters will contain everything configured from the control interface

@@ -2,6 +2,7 @@
 #include "filter.hpp"
 
 #include <math.h>
+#include "Arduino.h"
 
 Filter::Filter() {
 
@@ -54,6 +55,9 @@ void Filter::biquadCalculateLowpass(float cutoff, float q, float sampleRate) {
     a2 = a2 / a0;
     z1 = lastZ1;
     z2 = lastZ2;
+
+    //Serial.printf("inputs: cutoff=%f q=%f rate=%f, outputs: b0=%f b1=%f b2=%f a1=%f a2=%f z1=%f z2=%f \n", cutoff, q, sampleRate, b0, b1, b2, a1, a2, z1, z2);
+
 }
 
 int32_t Filter::biquadProcess(int32_t in) {
@@ -70,6 +74,10 @@ int32_t Filter::biquadProcess(int32_t in) {
     lastZ1 = z1;
     lastZ2 = z2;
     int32_t out_32 = (int32_t)(out * (float)(INT32_MAX));
+
+    //Serial.printf("coefficients: b0=%f b1=%f b2=%f a1=%f a2=%f z1=%f z2=%f \n", b0, b1, b2, a1, a2, z1, z2);
+    //Serial.printf("FilterProcess: input: %d output: %d  in_f=%f out_f=%f z1=%f z2=%f \n", in, out_32, in_f, out, z1, z2);
+
     return out_32;
-    // there's about 11 fixed point operations here
+    // there's about 11 floating point operations here
 }

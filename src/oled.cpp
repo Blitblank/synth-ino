@@ -28,6 +28,8 @@ void Oled::draw(int32_t* i2sBuffer, uint32_t bufferLength, uint32_t wavelength, 
 
     display.clearDisplay();
 
+    //Serial.printf("stride: %u phase: %u \n", stride, phase);
+
     for (uint8_t x = 0; x < 128; x++) {
 
         /*
@@ -38,7 +40,6 @@ void Oled::draw(int32_t* i2sBuffer, uint32_t bufferLength, uint32_t wavelength, 
 
         uint32_t val = phase >> 16; // where to index the buffer so that the screen is scaled to one period
         int32_t sample = i2sBuffer[val % bufferLength];
-
         uint8_t y = 32 + (sample >> (24+2)); // scale [-2^31, 2^31-1] to [0, 63]
 
         if(y > 63 || y <= 0) y = 0;
@@ -53,6 +54,8 @@ void Oled::draw(int32_t* i2sBuffer, uint32_t bufferLength, uint32_t wavelength, 
         prev_y = y;
 
         phase += stride;
+
+        //Serial.printf("sample[200]: %d \n", i2sBuffer[200]);
 
     }
     display.display(); // flush buffer to device over i2c

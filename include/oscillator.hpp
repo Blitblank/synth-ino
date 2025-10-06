@@ -20,9 +20,9 @@ public:
     // the precise version might be too slow to generate live (especially with multiple oscillators on multiple voices)
 
     int32_t sample(); // returns a single audio sample at the current phase
-    void step(); // increments the phase by the set phase increment value
+    void step() { phase += phaseIncrement; }; // increments the phase by the set phase increment value
     void setPhaseInc(uint32_t phaseInc) { phaseIncrement = phaseInc; } // TODO: keep a pointer to the phase table and instead set phaseInc by the midiNote
-    uint32_t getPhase() { return phaseIncrement; }
+    uint32_t getPhase() { return phase; }
 
     const int32_t *wavetable1; // carrier 1
     const int32_t *wavetable2; // carrier 2

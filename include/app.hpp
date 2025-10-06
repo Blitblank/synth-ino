@@ -31,17 +31,7 @@ private:
     static void audioTaskTrampoline(void* args);
     static void ioTaskTrampoline(void* args);
 
-    static void IRAM_ATTR i2sDmaIsr(void* arg); // buffer swap reporter
-    void i2sInit(); // TODO: also move this somewhere else I think
-
-    // member classes
-    WifiManager wifiManager;
-    Oled oled;
-    Synth synth;
-
-    static std::atomic<int32_t> activeBuffer; // current i2s buffer to read
-    static std::atomic<bool> bufferReady;
-    static intr_handle_t i2sIntrHandle;
+    void i2sInit();
 
     // audio parameters
     static constexpr uint32_t i2sBufferLength = 512;
@@ -50,14 +40,15 @@ private:
     static constexpr uint32_t i2sSampleRate = 44100;
     static constexpr uint32_t dmaBufferCount = 2;
     i2s_port_t i2sPort = I2S_NUM_0;
-
-    // for i2s. synth class writes to this and the oled class reads
-    int32_t i2sBufferA[i2sBufferLength] = {0};
-    int32_t i2sBufferB[i2sBufferLength] = {0};
-    // if i2s gets moved move this elsewhere too
+    int32_t i2sBuffer[i2sBufferLength] = {0};
 
     // variables for sharing between classes that run on different tasks
     uint32_t scopeTrigger = 0;
     uint32_t scopeWavelength = 0;
+    
+    // member classes
+    WifiManager wifiManager;
+    Oled oled;
+    Synth synth{ i2sBufferLength, i2sSampleRate };
 
 };

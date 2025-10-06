@@ -50,10 +50,10 @@ void Synth::initPhaseTable() {
 
     for (uint8_t n = MIDI_NOTE_MIN; n <= MIDI_NOTE_MAX; n++) {
 
-        double semitone_offset = (double)(n - 69); // tonal center at note=69(A4) is 440hz
-        double freq = 440.0 * pow(2.0, semitone_offset / 12.0); // midi note to Hz
-        double inc = freq/(double)sampleRate*(double)WAVETABLE_SIZE;
-        uint32_t inc_q =  (uint32_t)(inc * pow(2.0, (double)PHASE_PRECISION) + 0.5);
+        double semitone_offset = (double)(n - 69);
+        double freq = 440.0 * pow(2.0, semitone_offset / 12.0);
+        double inc  = freq / (double)(sampleRate) * (double)(WAVETABLE_SIZE);
+        uint32_t inc_q = (uint32_t)(inc * (1u << PHASE_PRECISION) + 0.5);
         phaseIncrements[n] = inc_q;
 
         // this implementation is equal tempered (twelfth root of two)
@@ -73,6 +73,7 @@ void Synth::init() {
     wavelength = (uint32_t)((double)sampleRate * wavelength_constant / frequency + 0.5); // scope width
     triggerOffset = (uint32_t)((wavelength_constant - 1.0)/2.0 * (double)wavelength + 0.5); // padding for oscilloscope waveform
 
+    Serial.printf("freq=%lf wavelength=%u offset=%u", frequency, wavelength, triggerOffset);
 
     oscillator1.setPhaseInc(phaseIncrements[midiNote]);
     oscillator2.setPhaseInc(phaseIncrements[midiNote]*4); // 2 octaves above
@@ -130,7 +131,10 @@ void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWave
         // can chain together filters here
 
         // magic happens
-        buffer[i] = filteredSample;
+        //buffer[i] = filteredSample; // TODO: fix filter because it dont work
+        buffer[i] = pmSample1;
+        //Serial.printf("%d ", filteredSample);
+
 
         // trigger the scope based on the lowest frequency oscillator
         uint32_t prevPhase = oscillator1.getPhase();
@@ -138,7 +142,7 @@ void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWave
         oscillator1.step(); // perhaps every time the oscillator is sampled it automatically increments its phase ?
         oscillator2.step();
         oscillator3.step();
-        if ((oscillator1.getPhase() % cycleLength) < (prevPhase % cycleLength) && !triggered) {
+        if (((oscillator1.getPhase() % cycleLength) < (prevPhase % cycleLength)) && !triggered) {
             if(i >= triggerOffset) {
                 trigger = i - triggerOffset;
                 triggered = true;
@@ -146,13 +150,14 @@ void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWave
         }
     }
 
-    scopeTrigger = &trigger;
-    scopeWavelength = &wavelength;
+    *scopeTrigger = trigger;
+    *scopeWavelength = wavelength;
+    //Serial.printf("wavelength: %u trigger: %u \n", &scopeTrigger, &scopeWavelength);
 
     //set_buffer_values(buffer);
     if(!trigger) {
         // dont know why sometimes it doesnt (i suspect its when the phase overflows the uint32_t type but it should still work idk)
-        //ESP_LOGI("AUDIO", "failed to trigger oscilloscope. phase = %lu. state1=%f, state2=%f", phase, last_z1, last_z2);
+        ESP_LOGI("AUDIO", "failed to trigger oscilloscope. phase = %lu. state1=%f, state2=%f", phase, last_z1, last_z2);
     }
 
 }

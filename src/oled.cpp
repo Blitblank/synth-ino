@@ -46,9 +46,9 @@ void Oled::draw(int32_t* i2sBuffer, uint32_t bufferLength, uint32_t wavelength, 
         y = 63 - y; // invert vertically 
         last_y[x] = y;
 
-        //ssd1306_set_pixel(device_handle, x, y, false);
         if(x == 0) prev_y = y;
-        display.writePixel(x, y, 1);
+        //display.writePixel(x, y, 1);
+        display.writeLine((x==0) ? x-1 : x, prev_y, x, y, 1);
 
         prev_x = x;
         prev_y = y;

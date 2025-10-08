@@ -25,18 +25,18 @@ void Filter::biquadCalculateLowpass(float cutoff, float q, float sampleRate) {
 
     // calculate biquad coefficients
     // these particular formulas are specific to lowpass
-    float b0 = (1.0f - cos_omega) / 2.0f;
-    float b1 = 1.0f - cos_omega;
-    float b2 = (1.0f - cos_omega) / 2.0f;
-    float a0 = 1.0f + alpha;
-    float a1 = -2.0f * cos_omega;
-    float a2 = 1.0f - alpha;
+    float x_b0 = (1.0f - cos_omega) / 2.0f;
+    float x_b1 = 1.0f - cos_omega;
+    float x_b2 = (1.0f - cos_omega) / 2.0f;
+    float x_a0 = 1.0f + alpha;
+    float x_a1 = -2.0f * cos_omega;
+    float x_a2 = 1.0f - alpha;
 
     // prevent more divide by zero errors
-    if(a0 < 0.001f && a0 >= 0.0f) {
-        a0 = 0.001f;
-    } else if(a0 > -0.001f && a0 < 0.0f) {
-        a0 = -0.001f;
+    if(x_a0 < 0.001f && x_a0 >= 0.0f) {
+        x_a0 = 0.001f;
+    } else if(x_a0 > -0.001f && x_a0 < 0.0f) {
+        x_a0 = -0.001f;
     }
 
     // TODO: if process works in fixed point then this will work too
@@ -48,15 +48,13 @@ void Filter::biquadCalculateLowpass(float cutoff, float q, float sampleRate) {
     //f->a2 = (int32_t)((a2 / a0) * (1 << 30));
     //f->z1 = 0;
     //f->z2 = 0;
-    b0 = b0 / a0;
-    b1 = b1 / a0;
-    b2 = b2 / a0;
-    a1 = a1 / a0;
-    a2 = a2 / a0;
+    b0 = x_b0 / x_a0;
+    b1 = x_b1 / x_a0;
+    b2 = x_b2 / x_a0;
+    a1 = x_a1 / x_a0;
+    a2 = x_a2 / x_a0;
     z1 = lastZ1;
     z2 = lastZ2;
-
-    //Serial.printf("inputs: cutoff=%f q=%f rate=%f, outputs: b0=%f b1=%f b2=%f a1=%f a2=%f z1=%f z2=%f \n", cutoff, q, sampleRate, b0, b1, b2, a1, a2, z1, z2);
 
 }
 
@@ -76,7 +74,7 @@ int32_t Filter::biquadProcess(int32_t in) {
     int32_t out_32 = (int32_t)(out * (float)(INT32_MAX));
 
     //Serial.printf("coefficients: b0=%f b1=%f b2=%f a1=%f a2=%f z1=%f z2=%f \n", b0, b1, b2, a1, a2, z1, z2);
-    //Serial.printf("FilterProcess: input: %d output: %d  in_f=%f out_f=%f z1=%f z2=%f \n", in, out_32, in_f, out, z1, z2);
+    //Serial.printf("FilterProcess: input: %d output: %d  in_f=%f out_f=%f z1=%f z2=%f \n\n", in, out_32, in_f, out, z1, z2);
 
     return out_32;
     // there's about 11 floating point operations here

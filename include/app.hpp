@@ -51,4 +51,5 @@ private:
     Oled oled;
     Synth synth{ i2sBufferLength, i2sSampleRate };
 
+    volatile uint32_t spinlock1 = 0;
 };

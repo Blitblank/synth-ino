@@ -56,9 +56,13 @@ void App::audioTask() {
 
         vTaskDelay(1);
 
-        // TODO: set semaphore on i2sBuffer write
+        spinlock1 = 1;
+
         synth.generate(i2sBuffer, i2sBufferLength, &scopeWavelength, &scopeTrigger);
         //Serial.printf("wavelength: %u trigger: %u \n", scopeTrigger, scopeWavelength);
+
+        spinlock1 = 0;
+
         size_t bytesWritten;
         i2s_write(i2sPort, i2sBuffer, sizeof(i2sBuffer), &bytesWritten, portMAX_DELAY); // esp-idf function
 
@@ -79,14 +83,16 @@ void App::ioTask() {
 
     while(1) {
 
-        // TODO: delay read until semaphore is given
+        
+        while(spinlock1 != 0) vTaskDelay(1); // no mutex causes the flickering
+
         uint32_t start = xTaskGetTickCount(); // time profiling
         oled.draw(i2sBuffer, i2sBufferLength, scopeWavelength, scopeTrigger);
         uint32_t end = xTaskGetTickCount();
 
         //Serial.printf("time diff of oled.draw: %d \n", end-start);
 
-        vTaskDelay(50); // ms
+        vTaskDelay(20); // ms
     }
 
 }

@@ -21,6 +21,7 @@ private:
     // biquad filter structure
     float b0, b1, b2, a1, a2;
     float z1, z2;
-    float lastZ1, lastZ2;
+    float lastZ1 = 0.0f;
+    float lastZ2 = 0.0f;
 
 };

@@ -91,11 +91,11 @@ void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWave
     float lpfCutoff = powf(webControls[3], 4.0f) * (float)sampleRate/2.1f; // max cutoff at nyquist freq
     float lpfResonance = powf(webControls[4], 1.0f) * 10.0f; // the pow function gives more precision at lower frequencies
     // floating point operations are fine just not when generating each sample
-    filter1.biquadCalculateLowpass(lpfCutoff, lpfResonance, (float)sampleRate);
+    filter1.biquadCalculateLowpass(3000.0f, 2.0f, (float)sampleRate);
     // although it will be faster once floating point operations are gone
 
     // consolidate this please <3
-    oscillator1.wavetable1 = wavetables[waveSelectors[0]];
+    oscillator1.wavetable1 = wavetables[waveSelectors[1]];
     oscillator1.wavetable2 = wavetables[waveSelectors[1]];
     oscillator1.wavetable3 = wavetables[waveSelectors[2]];
     oscillator1.carrierInterpolation = carrierInterpolation;
@@ -131,8 +131,7 @@ void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWave
         // can chain together filters here
 
         // magic happens
-        //buffer[i] = filteredSample; // TODO: fix filter because it dont work
-        buffer[i] = pmSample1;
+        buffer[i] = filteredSample; // TODO: fix filter because it dont work
         //Serial.printf("%d ", filteredSample);
 
 
@@ -148,6 +147,7 @@ void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWave
                 triggered = true;
             }
         }
+        // TODO: fix the scope stuttering sometimes
     }
 
     *scopeTrigger = trigger;

@@ -8,7 +8,7 @@ Oscillator::Oscillator(float freq, uint32_t size, int32_t* wt1, int32_t* wt2, in
         frequency(freq), wavetableSize(size), wavetable1(wt1), wavetable2(wt2), wavetable3(wt3), carrierInterpolation(carrierInterp), modulationDepth(modDepth), relativeVolume(relVolume) {
 
     phaseIncrement = (uint32_t)((freq * wavetableSize * (1 << PHASE_PRECISION)) / 44100 + 0.5); // TODO: use the phase table instead
-    phase = 0; // Also TODO: 44100 needs to be in terms oif the sample rate but it'll go away if the above is set with the phase table
+    phase = 0; // Also TODO: 44100 needs to be in terms of the sample rate but it'll go away if the above is set with the phase table
 
     wavetableMask = wavetableSize - 1;
 }

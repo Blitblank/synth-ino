@@ -34,7 +34,7 @@ private:
     void i2sInit();
 
     // audio parameters
-    static constexpr uint32_t i2sBufferLength = 512;
+    static constexpr uint32_t i2sBufferLength = 1024;
     static constexpr uint32_t sampleBytes = sizeof(int32_t);
     static constexpr uint32_t bufferBytes = i2sBufferLength * sampleBytes;
     static constexpr uint32_t i2sSampleRate = 44100;

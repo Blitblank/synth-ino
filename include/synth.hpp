@@ -5,6 +5,7 @@
 
 #include "oscillator.hpp"
 #include "filter.hpp"
+#include "wifiManager.hpp"
 
 #define MIDI_NOTE_MIN 0
 #define MIDI_NOTE_MAX 127
@@ -17,7 +18,7 @@ public:
     ~Synth() = default;
 
     void init();
-    void generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWavelength, uint32_t* scopeTrigger);
+    void generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWavelength, uint32_t* scopeTrigger, ControlState* controls);
 
 private:
 
@@ -52,12 +53,6 @@ private:
     // maybe an array of oscillators? makes looping over them easier
     // voice will need a function to mix oscillators
     // synth class will do it manually
-
-    // control
-    const float webControls[5] = {0.0f, 0.0f, 0.0f, 1.0f, 1.0f};
-    uint32_t waveSelectors[4] = {0, 1, 2, 3}; 
-    // TODO: synth will get passed a parameters struct when generate() is called
-    // parameters will contain everything configured from the control interface
 
     // loads a waveform shape into each wavetable array, either mathematically generated at startup or loaded from disk
     void initWavetables();

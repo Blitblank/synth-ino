@@ -34,13 +34,8 @@ void App::wifiTask() {
 
     utils::serialLog(wifiTaskHandle, xTaskGetTickCount(), "Wifi task start.");
 
-    wifiManager.update();
-
-    /*
-    while(1) {    
-        vTaskDelay(10); // ms
-    }
-    */
+    //wifiManager.init();
+    // TODO: when i2c module is installed, turn on an LED to indicate webserver status
     
     vTaskDelete(NULL);
 
@@ -56,17 +51,17 @@ void App::audioTask() {
 
         vTaskDelay(1);
 
+        ControlState controls = {{0.0f, 0.0f, 0.0f, 0.5f, 0.5f}, {1, 2, 3, 4}};
+        //wifiManager.getControlState(&controls);
+
         spinlock1 = 1;
-
-        synth.generate(i2sBuffer, i2sBufferLength, &scopeWavelength, &scopeTrigger);
-        //Serial.printf("wavelength: %u trigger: %u \n", scopeTrigger, scopeWavelength);
-
+        synth.generate(i2sBuffer, i2sBufferLength, &scopeWavelength, &scopeTrigger, &controls);
         spinlock1 = 0;
 
         size_t bytesWritten;
         i2s_write(i2sPort, i2sBuffer, sizeof(i2sBuffer), &bytesWritten, portMAX_DELAY); // esp-idf function
 
-        //Serial.printf("bytes_written: %d \n", bytesWritten);
+        Serial.printf("bytes_written: %d \n", bytesWritten);
 
 
         // TODO: performance profiling of the synth generation

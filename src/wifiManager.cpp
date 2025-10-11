@@ -1,33 +1,58 @@
 
 #include "wifiManager.hpp"
 
+// TODO: read web page from html file on sd card
+const char *slider_html =
+        "<!DOCTYPE html><html><body>"
+        "<h2>Phase Modulation</h2>"
+        "<input type='range' min='0' max='1' step='0.01' value='0.0' id='s1'>Interpolate between C1 & C2<br>"
+        "<input type='range' min='40' max='400' step='0.01' value='0.0' id='s2'>pitch (40hz -> 400hz)<br>"
+        "<input type='range' min='0' max='1' step='0.01' value='0.0' id='s3'>Phase Modulation Depth<br>"
+        "<input type='range' min='0' max='1' step='0.01' value='0.5' id='s4'>Low-Pass Filter Cutoff<br>"
+        "<input type='range' min='0' max='1' step='0.01' value='0.5' id='s5'>Low-Pass Filter Resonance<br>"
+        "<h3>Wave Selectors</h3>"
+        "<div>Carrier 1: <select id='d1'>"
+        "<option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option>"
+        "<option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option>"
+        "</select><br></div>"
+        "<div>Carrier 2: <select id='d2'>"
+        "<option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option>"
+        "<option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option>"
+        "</select><br></div>"
+        "<div>Modulator 1: <select id='d3'>"
+        "<option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option>"
+        "<option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option>"
+        "</select><br></div>"
+        "<div>nothing<select id='d4'>"
+        "<option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option>"
+        "<option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option>"
+        "</select><br></div>"
+        "<script>"
+        "let ws = new WebSocket('ws://' + location.host + '/ws');"
+        "function sendSliders() {"
+        "  let s = [1,2,3,4,5].map(i => document.getElementById('s'+i).value).join(',');"
+        "  let d = [1,2,3,4].map(i => document.getElementById('d'+i).value).join(',');"
+        "  ws.send(s + ';' + d);"
+        "}"
+        "setInterval(sendSliders, 100);"
+        "</script>"
+        "</body></html>";
+
 WifiManager::WifiManager() {
-    // TODO: implement
+    // initialize control sate mainly
+    for (int i = 0; i < 3; i++) controlState.sliders[i] = 0.0f;
+    for (int i = 0; i < 4; i++) controlState.dropdowns[i] = 0;
+    // TODO: for some reason if the filter resonance/cutoff freq (i think its cutoff) goes to zero it kills the filter
+    controlState.sliders[3] = 0.5f;
+    controlState.sliders[4] = 0.5f;
 }
 
 void WifiManager::init() {
-    // TODO: implement
-
-    // don't put this in constructor
+    connectWiFi();
+    startWeb();
 }
 
-void WifiManager::update() {
-    // Example: show control values every second
-    static unsigned long last = 0;
-    if (millis() - last > 1000) {
-        last = millis();
-        ControlState cs;
-        getControlState(cs);
-        Serial.print("State: ");
-        for (int i = 0; i < 5; ++i) Serial.printf("%.3f ", cs.sliders[i]);
-        Serial.print(" | ");
-        for (int i = 0; i < 4; ++i) Serial.printf("%u ", cs.dropdowns[i]);
-        Serial.println();
-    }
-
-}
-
-void WifiManager::onWsEvent(AsyncWebSocket* serverPtr, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len) {
+void WifiManager::handleWsEvent(AsyncWebSocket* serverPtr, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len) {
 
   if (type == WS_EVT_CONNECT) {
     Serial.printf("WS: client #%u connected\n", client->id());
@@ -41,11 +66,11 @@ void WifiManager::onWsEvent(AsyncWebSocket* serverPtr, AsyncWebSocketClient* cli
     payload.assign((char*)data, len);
 
     // parse and store
-    parse_and_store_payload(payload.c_str(), payload.size());
+    parsePayload(payload.c_str(), payload.size());
   }
 }
 
-void WifiManager::parse_and_store_payload(const char *payload, size_t len) {
+void WifiManager::parsePayload(const char *payload, size_t len) {
     // copy into a null-terminated buffer (payload may not be null-terminated)
     std::string s(payload, len);
     // find separator
@@ -102,28 +127,23 @@ void WifiManager::parse_and_store_payload(const char *payload, size_t len) {
         }
     }
 
-    // commit under mutex
-    portENTER_CRITICAL(&g_controlMux);
-    for (int i = 0; i < 5; ++i) g_controlState.sliders[i] = temp_sliders[i];
-    for (int i = 0; i < 4; ++i) g_controlState.dropdowns[i] = temp_dd[i];
-    portEXIT_CRITICAL(&g_controlMux);
+    for (int i = 0; i < 5; ++i) controlState.sliders[i] = temp_sliders[i];
+    for (int i = 0; i < 4; ++i) controlState.dropdowns[i] = temp_dd[i];
 
-    // Debug print
+    /*
     Serial.print("Parsed sliders: ");
-    for (int i = 0; i < 5; ++i) { Serial.print(g_controlState.sliders[i], 3); Serial.print(" "); }
+    for (int i = 0; i < 5; ++i) { Serial.print(controlState.sliders[i], 3); Serial.print(" "); }
     Serial.print(" dropdowns: ");
-    for (int i = 0; i < 4; ++i) { Serial.print(g_controlState.dropdowns[i]); Serial.print(" "); }
+    for (int i = 0; i < 4; ++i) { Serial.print(controlState.dropdowns[i]); Serial.print(" "); }
     Serial.println();
+    */
 }
 
-// ----- API to read the state (thread-safe) -----
-void WifiManager::getControlState(ControlState &out) {
-    portENTER_CRITICAL(&g_controlMux);
-    out = g_controlState;
-    portEXIT_CRITICAL(&g_controlMux);
+void WifiManager::getControlState(ControlState* out) {
+    if(!active) return;
+    *out = this->controlState;
 }
 
-// ----- setup & start server -----
 void WifiManager::startWeb() {
     // serve html
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -131,25 +151,28 @@ void WifiManager::startWeb() {
     });
 
     // bind websocket
-    ws.onEvent(onWsEvent);
+    ws.onEvent([this](AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
+        {
+            this->handleWsEvent(server, client, type, arg, data, len);
+        });
     server.addHandler(&ws);
 
     server.begin();
     Serial.println("HTTP server started.");
+    active = true;
 }
 
-// ----- WiFi connect helper -----
 void WifiManager::connectWiFi() {
     Serial.printf("WiFi connecting to '%s' ...\n", networkSsid);
     WiFi.mode(WIFI_STA);
     WiFi.begin(networkSsid, networkPassword);
 
     // wait for connection
-    unsigned long start = millis();
+    unsigned long start = xTaskGetTickCount();
     while (WiFi.status() != WL_CONNECTED) {
-        delay(200);
+        vTaskDelay(200);
         Serial.print(".");
-        if ((millis() - start) > 15000) {
+        if ((xTaskGetTickCount() - start) > 15000) {
             Serial.println("\nWiFi connection timeout");
             break;
         }

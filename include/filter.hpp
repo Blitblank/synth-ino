@@ -15,6 +15,8 @@ public:
     // band pass
     // notch
     // https://webaudio.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html
+    // instead of making different calculate functions, have an enum which specifies the filter type
+    // one public calculate which the enum is passed through and a private calculate for the specific types, switch statement to choose
 
 private:
 

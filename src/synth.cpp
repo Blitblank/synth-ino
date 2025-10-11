@@ -80,36 +80,39 @@ void Synth::init() {
     oscillator3.setPhaseInc(phaseIncrements[midiNote]*4*3/2); // 2 octaves+5th above
 }
 
-void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWavelength, uint32_t* scopeTrigger) {
-    // TODO: pass in control parameters through a struct
-    //get_slider_values(web_controls);
-    //get_dropdown_values(wave_selectors);
+void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWavelength, uint32_t* scopeTrigger, ControlState* controls) {
 
     // modify oscillator parameters based on the controls
-    uint32_t carrierInterpolation = (uint32_t)(webControls[0] * (float)UINT32_MAX);
-    uint32_t modulationDepth = (uint32_t)(webControls[2] * (1 << (32-2)));
-    float lpfCutoff = powf(webControls[3], 4.0f) * (float)sampleRate/2.1f; // max cutoff at nyquist freq
-    float lpfResonance = powf(webControls[4], 1.0f) * 10.0f; // the pow function gives more precision at lower frequencies
-    // floating point operations are fine just not when generating each sample
-    filter1.biquadCalculateLowpass(3000.0f, 2.0f, (float)sampleRate);
-    // although it will be faster once floating point operations are gone
+    // TODO: process control values in either payload parsing or in javascript
+    uint32_t carrierInterpolation = (uint32_t)(controls->sliders[0] * (float)UINT32_MAX);
+    uint32_t modulationDepth = (uint32_t)(controls->sliders[2] * (1 << (32-2)));
+    float lpfCutoff = powf(controls->sliders[3], 4.0f) * (float)sampleRate/2.1f; // max cutoff at nyquist freq
+    float lpfResonance = powf(controls->sliders[4], 1.0f) * 10.0f; // the pow function gives more precision at lower frequencies
+    // TODO: get rid of floating point operations because it bottlenecks to 24 bit precision
+    filter1.biquadCalculateLowpass(lpfCutoff, lpfResonance, (float)sampleRate);
+
+    // this is just for a demo, remove when midi 
+    float freq = controls->sliders[1];
+    float inc  = freq / (float)(sampleRate) * (float)(WAVETABLE_SIZE);
+    uint32_t inc_q = (uint32_t)(inc * (1u << PHASE_PRECISION) + 0.5);
+    //oscillator1.setPhaseInc(inc_q);
 
     // consolidate this please <3
-    oscillator1.wavetable1 = wavetables[waveSelectors[1]];
-    oscillator1.wavetable2 = wavetables[waveSelectors[1]];
-    oscillator1.wavetable3 = wavetables[waveSelectors[2]];
+    oscillator1.wavetable1 = wavetables[controls->dropdowns[0]];
+    oscillator1.wavetable2 = wavetables[controls->dropdowns[1]];
+    oscillator1.wavetable3 = wavetables[controls->dropdowns[2]];
     oscillator1.carrierInterpolation = carrierInterpolation;
     oscillator1.modulationDepth = modulationDepth;
     // i leave these here because they will have different options in the future
-    oscillator2.wavetable1 = wavetables[waveSelectors[0]];
-    oscillator2.wavetable2 = wavetables[waveSelectors[1]];
-    oscillator2.wavetable3 = wavetables[waveSelectors[2]];
+    oscillator2.wavetable1 = wavetables[controls->dropdowns[0]];
+    oscillator2.wavetable2 = wavetables[controls->dropdowns[1]];
+    oscillator2.wavetable3 = wavetables[controls->dropdowns[2]];
     oscillator2.carrierInterpolation = carrierInterpolation;
     oscillator2.modulationDepth = modulationDepth;
     // just now theyre the same because i havent made the different options yet
-    oscillator3.wavetable1 = wavetables[waveSelectors[0]];
-    oscillator3.wavetable2 = wavetables[waveSelectors[1]];
-    oscillator3.wavetable3 = wavetables[waveSelectors[2]];
+    oscillator3.wavetable1 = wavetables[controls->dropdowns[0]];
+    oscillator3.wavetable2 = wavetables[controls->dropdowns[1]];
+    oscillator3.wavetable3 = wavetables[controls->dropdowns[2]];
     oscillator3.carrierInterpolation = carrierInterpolation;
     oscillator3.modulationDepth = modulationDepth;
 
@@ -118,8 +121,8 @@ void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWave
     for (uint32_t i = 0; i < bufferLength; ++i) { // fill buffer with audio samples
 
         int32_t pmSample1 = oscillator1.sample();
-        int32_t pmSample2 = oscillator2.sample();
-        int32_t pmSample3 = oscillator3.sample();
+        //int32_t pmSample2 = oscillator2.sample();
+        //int32_t pmSample3 = oscillator3.sample();
         // mix 3 oscillators based on their volumes
         //int32_t osc_samples = pm_sample1/2 + pm_sample2/8 + pm_sample3/16; // this is the most basic scuffed way you can do it
         int32_t oscSamples = pmSample1/2;
@@ -131,7 +134,7 @@ void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWave
         // can chain together filters here
 
         // magic happens
-        buffer[i] = filteredSample; // TODO: fix filter because it dont work
+        buffer[i] = filteredSample;
         //Serial.printf("%d ", filteredSample);
 
 
@@ -147,7 +150,6 @@ void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWave
                 triggered = true;
             }
         }
-        // TODO: fix the scope stuttering sometimes
     }
 
     *scopeTrigger = trigger;

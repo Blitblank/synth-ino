@@ -1,5 +1,5 @@
 
-#include "oled.hpp"
+#include "Oled.hpp"
 
 #include "utils.h"
 #include "freertos/FreeRTOS.h"

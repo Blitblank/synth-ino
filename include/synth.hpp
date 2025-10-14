@@ -3,9 +3,9 @@
 
 #include <Arduino.h>
 
-#include "oscillator.hpp"
-#include "filter.hpp"
-#include "wifiManager.hpp"
+#include "Oscillator.hpp"
+#include "Filter.hpp"
+#include "WifiManager.hpp"
 
 #define MIDI_NOTE_MIN 0
 #define MIDI_NOTE_MAX 127

@@ -2,13 +2,14 @@
 #pragma once
 
 #include <atomic>
-
-#include "synth.hpp"
-#include "state.hpp"
-#include "wifiManager.hpp"
-#include "oled.hpp"
-#include "utils.h"
 #include <driver/i2s.h>
+
+#include "Synth.hpp"
+#include "WifiManager.hpp"
+#include "Oled.hpp"
+//#include "Disk.hpp"
+#include "utils.h"
+
 
 class App {
 public:

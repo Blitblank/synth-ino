@@ -1,9 +1,10 @@
 
 #pragma once
 
+#include <WebServer.h>
+#include <WiFi.h>
 #include "AsyncTCP.h"
 #include <ESPAsyncWebServer.h>
-#include <WiFi.h>
 
 struct ControlState {
   float sliders[5];    // s1..s5
@@ -12,11 +13,12 @@ struct ControlState {
 
 class WifiManager {
 public:
-    WifiManager();
+	WifiManager();
+    //WifiManager(Disk* disk_);
     ~WifiManager() = default;
 
     void init();
-	void getControlState(ControlState* out);
+    void getControlState(ControlState* out);
 
 private:
 

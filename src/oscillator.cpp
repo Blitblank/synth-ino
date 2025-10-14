@@ -1,5 +1,5 @@
 
-#include "oscillator.hpp"
+#include "Oscillator.hpp"
 
 #include <stdint.h>
 #include "Arduino.h"

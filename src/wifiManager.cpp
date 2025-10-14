@@ -1,5 +1,5 @@
 
-#include "wifiManager.hpp"
+#include "WifiManager.hpp"
 
 // TODO: read web page from html file on sd card
 const char *slider_html =

@@ -1,5 +1,5 @@
 
-#include "filter.hpp"
+#include "Filter.hpp"
 
 #include <math.h>
 #include "Arduino.h"

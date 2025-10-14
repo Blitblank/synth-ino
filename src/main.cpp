@@ -1,7 +1,7 @@
 
 #include <Arduino.h>
 
-#include "app.hpp"
+#include "App.hpp"
 
 App app;
 

@@ -47,8 +47,68 @@ WifiManager::WifiManager() {
     controlState.sliders[4] = 0.5f;
 }
 
-void WifiManager::init() {
-    connectWiFi();
+void WifiManager::init(Disk* disk) {
+
+    // TODO: move file related tasks to disk class
+    // probably call the function and return a vector
+    const char *path = "/wifi-networks/networks.txt";
+    File file = SD.open(path);
+    if (!file) {
+        Serial.println("Failed to open networks file!");
+        return;
+    }
+
+    // fill vector according to file. might move this according to comment above
+    std::vector<WiFiNetwork> networks;
+    while (file.available()) {
+        String line = file.readStringUntil('\n');
+        line.trim();
+        if (line.length() == 0) continue;
+
+        WiFiNetwork net;
+        if (disk->parseNetworkLine(line, net)) {
+            networks.push_back(net);
+        }
+    }
+    file.close();
+
+    if (networks.empty()) {
+        Serial.println("no valid network entries found");
+        return;
+    }
+
+    // sort vector by priorty (priority 1=first)
+    std::sort(networks.begin(), networks.end(), [](const WiFiNetwork &a, const WiFiNetwork &b) {
+        return a.priority < b.priority;
+    });
+
+    // connect to wifi networks in order
+    bool connected = false;
+    int connectedIndex = -1;
+    for (size_t i = 0; i < networks.size(); ++i) {
+        if (connectWiFi(networks[i])) {
+            connected = true;
+            connectedIndex = i;
+            Serial.printf("Connected to %s\n", networks[i].ssid.c_str());
+            break;
+        }
+    }
+
+    if (connected) {
+        // Move the connected network to the top of the list
+        if (connectedIndex > 0) {
+        WiFiNetwork successful = networks[connectedIndex];
+        networks.erase(networks.begin() + connectedIndex);
+        networks.insert(networks.begin(), successful);
+
+        // Rewrite the file to make this one highest priority next time
+        disk->editNetworkFile(networks, path);
+        Serial.println("Updated network priority order on SD card.");
+        }
+    } else {
+        Serial.println("Failed to connect to any network.");
+    }
+
     startWeb();
 }
 
@@ -162,24 +222,21 @@ void WifiManager::startWeb() {
     active = true;
 }
 
-void WifiManager::connectWiFi() {
-    Serial.printf("WiFi connecting to '%s' ...\n", networkSsid);
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(networkSsid, networkPassword);
+bool WifiManager::connectWiFi(const WiFiNetwork &net) {
 
-    // wait for connection
-    unsigned long start = xTaskGetTickCount();
-    while (WiFi.status() != WL_CONNECTED) {
+    Serial.printf("Trying to connect to SSID: %s\n", net.ssid.c_str());
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(net.ssid.c_str(), net.password.c_str());
+    
+    uint32_t startAttempt = xTaskGetTickCount();
+    while (WiFi.status() != WL_CONNECTED && xTaskGetTickCount() - startAttempt < 8000) {
         vTaskDelay(200);
         Serial.print(".");
-        if ((xTaskGetTickCount() - start) > 15000) {
-            Serial.println("\nWiFi connection timeout");
-            break;
-        }
     }
-    if (WiFi.status() == WL_CONNECTED) {
+    Serial.println();
+    bool success = WiFi.status();
+    if(success == WL_CONNECTED) {
         Serial.printf("\nConnected. IP: %s\n", WiFi.localIP().toString().c_str());
-    } else {
-        Serial.println("Failed to connect to WiFi.");
     }
+    return success == WL_CONNECTED;
 }

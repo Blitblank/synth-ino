@@ -5,6 +5,7 @@
 #include <WiFi.h>
 #include "AsyncTCP.h"
 #include <ESPAsyncWebServer.h>
+#include "Disk.hpp"
 
 struct ControlState {
   float sliders[5];    // s1..s5
@@ -17,7 +18,7 @@ public:
     //WifiManager(Disk* disk_);
     ~WifiManager() = default;
 
-    void init();
+    void init(Disk* disk);
     void getControlState(ControlState* out);
 
 private:
@@ -25,16 +26,9 @@ private:
     void handleWsEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len);
     void parsePayload(const char *payload, size_t len);
     void startWeb();
-    void connectWiFi();
+    bool connectWiFi(const WiFiNetwork &net);
 
     const char* taskHandle = "WIFI_TASK";
-
-    // TODO: read sd card for network options
-    // this could have a list with networks assigned a priority and the last successful connection has highest priority
-    //const char* networkSsid = "attinternet";
-    //const char* networkPassword = "homeburger#sama";
-    const char* networkSsid = "mcgee-2.4G";
-    const char* networkPassword = "aiRey56v";
 
     // Shared state instance
     ControlState controlState;

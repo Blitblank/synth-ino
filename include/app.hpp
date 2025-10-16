@@ -48,6 +48,7 @@ private:
     uint32_t scopeWavelength = 0;
     
     // member classes
+    Disk disk;
     WifiManager wifiManager;
     Oled oled;
     Synth synth{ i2sBufferLength, i2sSampleRate };

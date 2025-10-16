@@ -51,11 +51,11 @@ void WifiManager::init(Disk* disk) {
 
     // TODO: move file related tasks to disk class
     // probably call the function and return a vector
-    const char *path = "/wifi-networks/networks.txt";
+    const char *path = "wifi-networks/networks.txt";
     File file = SD.open(path);
     if (!file) {
         Serial.println("Failed to open networks file!");
-        return;
+        //return;
     }
 
     // fill vector according to file. might move this according to comment above
@@ -74,13 +74,15 @@ void WifiManager::init(Disk* disk) {
 
     if (networks.empty()) {
         Serial.println("no valid network entries found");
-        return;
+        //return;
     }
 
     // sort vector by priorty (priority 1=first)
     std::sort(networks.begin(), networks.end(), [](const WiFiNetwork &a, const WiFiNetwork &b) {
         return a.priority < b.priority;
     });
+
+    networks.push_back(WiFiNetwork{"attinternet", "homeburger#sama", 1});
 
     // connect to wifi networks in order
     bool connected = false;
@@ -229,14 +231,15 @@ bool WifiManager::connectWiFi(const WiFiNetwork &net) {
     WiFi.begin(net.ssid.c_str(), net.password.c_str());
     
     uint32_t startAttempt = xTaskGetTickCount();
-    while (WiFi.status() != WL_CONNECTED && xTaskGetTickCount() - startAttempt < 8000) {
+    while (WiFi.status() != WL_CONNECTED && ((xTaskGetTickCount() - startAttempt) < 15000)) {
         vTaskDelay(200);
         Serial.print(".");
     }
     Serial.println();
-    bool success = WiFi.status();
+    wl_status_t success = WiFi.status();
     if(success == WL_CONNECTED) {
         Serial.printf("\nConnected. IP: %s\n", WiFi.localIP().toString().c_str());
     }
+    
     return success == WL_CONNECTED;
 }

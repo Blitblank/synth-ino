@@ -7,10 +7,12 @@ Disk::Disk() {
 
 void Disk::init() {
 
-  if (!SD.begin(chipSelect)) {
-    Serial.println("SD init failed");
-  }
-  // TODO: notify some led that this component isnt functioning
+	SPIClass spi = SPIClass(HSPI);
+	spi.begin(clock, dataOut, dataIn, chipSelect);
+	if (!SD.begin(chipSelect)) {
+		Serial.println("SD init failed");
+	}
+	// TODO: notify some led that this component isnt functioning
 
 }
 

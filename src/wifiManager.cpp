@@ -47,7 +47,14 @@ WifiManager::WifiManager() {
     controlState.sliders[4] = 0.5f;
 }
 
-void WifiManager::init(Disk* disk) {
+void WifiManager::init(Disk* disk, Adafruit_MCP23X17* io) {
+
+    io = &mcp;
+    mcp.digitalWrite(1, HIGH);
+
+    setupEvents();
+    WiFi.setAutoReconnect(true);
+    WiFi.persistent(false);
 
     // TODO: move file related tasks to disk class
     // probably call the function and return a vector
@@ -228,6 +235,7 @@ bool WifiManager::connectWiFi(const WiFiNetwork &net) {
 
     Serial.printf("Trying to connect to SSID: %s\n", net.ssid.c_str());
     WiFi.mode(WIFI_STA);
+    WiFi.disconnect(true, true);
     WiFi.begin(net.ssid.c_str(), net.password.c_str());
     
     uint32_t startAttempt = xTaskGetTickCount();
@@ -239,7 +247,31 @@ bool WifiManager::connectWiFi(const WiFiNetwork &net) {
     wl_status_t success = WiFi.status();
     if(success == WL_CONNECTED) {
         Serial.printf("\nConnected. IP: %s\n", WiFi.localIP().toString().c_str());
+        lastNetwork = net; 
     }
-    
+
     return success == WL_CONNECTED;
+}
+
+void WifiManager::setupEvents() {
+    WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info) {
+        switch (event) {
+            case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
+                Serial.println("WiFi disconnected!");
+                mcp.digitalWrite(1, LOW);
+                break;
+
+            case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+                Serial.println("WiFi connected.");
+                break;
+
+            case ARDUINO_EVENT_WIFI_STA_GOT_IP:
+                Serial.printf("Got IP: %s\n", WiFi.localIP().toString().c_str());
+                mcp.digitalWrite(1, HIGH);
+                break;
+
+            default:
+                break;
+        }
+    });
 }

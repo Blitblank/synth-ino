@@ -21,6 +21,20 @@ void App::init() {
     i2sInit();
     disk.init();
 
+    Wire.begin(I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO, I2C_MASTER_FREQ_HZ); // TODO: add these pins to pins.h file
+    if (!mcp.begin_I2C()) {
+        Serial.println("mcp i2c init failure");
+    } else {
+        mcp.pinMode(0, OUTPUT); // LED 2
+        mcp.pinMode(1, OUTPUT); // LED 1
+        mcp.pinMode(8, OUTPUT); // LED 3
+        mcp.pinMode(9, OUTPUT); // LED 4
+        // TODO: also these io expanded pins too
+    }
+    mcp.digitalWrite(0, LOW);
+    mcp.digitalWrite(1, LOW);
+    mcp.digitalWrite(8, LOW);
+    mcp.digitalWrite(9, LOW);
 }
 
 void App::main() {
@@ -35,7 +49,7 @@ void App::wifiTask() {
 
     utils::serialLog(wifiTaskHandle, xTaskGetTickCount(), "Wifi task start.");
 
-    wifiManager.init(&disk);
+    wifiManager.init(&disk, &mcp);
     // TODO: when i2c module is installed, turn on an LED to indicate webserver status
     
     vTaskDelete(NULL);

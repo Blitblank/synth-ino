@@ -7,8 +7,9 @@
 #include "Synth.hpp"
 #include "WifiManager.hpp"
 #include "Oled.hpp"
-//#include "Disk.hpp"
+#include "Disk.hpp"
 #include "utils.h"
+#include <Adafruit_MCP23X17.h>
 
 
 class App {
@@ -54,4 +55,6 @@ private:
     Synth synth{ i2sBufferLength, i2sSampleRate };
 
     volatile uint32_t spinlock1 = 0;
+
+    Adafruit_MCP23X17 mcp;
 };

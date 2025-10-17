@@ -52,7 +52,9 @@ private:
     // TODO: eventually oscillators and filters will be members of a voice class, but I'm only doing one voice for now
     // maybe an array of oscillators? makes looping over them easier
     // voice will need a function to mix oscillators
-    // synth class will do it manually
+    // synth class will mix voices manually
+    // profile speed to see how many voices the processor is capable of
+    // ongoing optimization will allow more concurrent voices
 
     // loads a waveform shape into each wavetable array, either mathematically generated at startup or loaded from disk
     void initWavetables();
@@ -62,5 +64,8 @@ private:
     // audio configurations
     uint32_t sampleRate = 0;
     uint32_t bufferLength = 0; 
+
+    // TODO: note handler (midi handler, note sequencer, etc.)
+    // TODO: envelope generator 
 
 };

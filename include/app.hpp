@@ -57,4 +57,5 @@ private:
     volatile uint32_t spinlock1 = 0;
 
     Adafruit_MCP23X17 mcp;
+
 };

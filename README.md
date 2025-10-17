@@ -13,6 +13,14 @@ Board characteristics:
 The ESP32 offers WiFi capabilities, which this project uses for a control interface instead of hardware circuitry.
 The dual cores of the S3 module allows the synthesizer task to be isolated so that it is not blocked by other tasks (web server, scope, etc.)
 
+Software features planned to add in this that don't exist yet:
+  - Web terminal interface, including a console log output and a cli terminal for remote board control
+  - Note sequencing, first manually then through midi
+  - Audio read/write to and from disk. Playing sounds loaded on sd card and saving generated sounds to the sd card. (same can be done for midi)
+  - Wavetable reading from disk
+  - Envelope generation
+  - Loading webpages from disk
+
 Firmware stack: FreeRTOS >> ESP-IDF >> Arduino
 
 Utilizing PlatformIO for build system and chip interfacing 

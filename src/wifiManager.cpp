@@ -23,10 +23,10 @@ void WifiManager::init(Disk* disk, Adafruit_MCP23X17* io) {
     const char *path = "/wifi-networks.txt";
     File file = SPIFFS.open(path, FILE_READ);
     if (!file) {
-        Serial.println("Failed to open networks file!");
+        Serial.println("networks file not found");
     }
 
-    // fill vector according to file. might move this according to comment above
+    // def should have a vector<Network> networks = disk.GetNetworks(); function
     std::vector<WiFiNetwork> networks;
     while (file.available()) {
         String line = file.readStringUntil('\n');
@@ -57,24 +57,22 @@ void WifiManager::init(Disk* disk, Adafruit_MCP23X17* io) {
         if (connectWiFi(networks[i])) {
             connected = true;
             connectedIndex = i;
-            Serial.printf("Connected to %s\n", networks[i].ssid.c_str());
+            Serial.printf("Connected to SSID: %s\n", networks[i].ssid.c_str());
             break;
         }
     }
 
     if (connected) {
-        // Move the connected network to the top of the list
+        // resort the networks list
         if (connectedIndex > 0) {
-        WiFiNetwork successful = networks[connectedIndex];
-        networks.erase(networks.begin() + connectedIndex);
-        networks.insert(networks.begin(), successful);
+            WiFiNetwork successful = networks[connectedIndex];
+            networks.erase(networks.begin() + connectedIndex);
+            networks.insert(networks.begin(), successful);
 
-        // Rewrite the file to make this one highest priority next time
-        disk->editNetworkFile(networks, path);
-        Serial.println("Updated network priority order on SD card.");
+            disk->editNetworkFile(networks, path);
         }
     } else {
-        Serial.println("Failed to connect to any network.");
+        Serial.println("Failed to connect to the configured networks"); // big fat failure
     }
 
     startWeb();
@@ -82,29 +80,28 @@ void WifiManager::init(Disk* disk, Adafruit_MCP23X17* io) {
 
 void WifiManager::handleWsEvent(AsyncWebSocket* serverPtr, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len) {
 
-  if (type == WS_EVT_CONNECT) {
-    Serial.printf("WS: client #%u connected\n", client->id());
-    // Optionally send current values to client on connect
-  } else if (type == WS_EVT_DISCONNECT) {
-    Serial.printf("WS: client #%u disconnected\n", client->id());
-  } else if (type == WS_EVT_DATA) {
-    // data may be fragmented; AsyncWebSocket gives whole message by default for text frames
-    // Ensure we treat as text
-    std::string payload;
-    payload.assign((char*)data, len);
+    if (type == WS_EVT_CONNECT) {
+        Serial.printf("WS: client #%u connected\n", client->id());
+        // TODO: send current synth config values to sync with client
+    } else if (type == WS_EVT_DISCONNECT) {
+        Serial.printf("WS: client #%u disconnected\n", client->id());
+    } else if (type == WS_EVT_DATA) {
+        // ws payload needs to be error checked
+        std::string payload;
+        payload.assign((char*)data, len);
 
-    // parse and store
-    parsePayload(payload.c_str(), payload.size());
-  }
+        // parse and store
+        parsePayload(payload.c_str(), payload.size());
+    }
 }
 
 void WifiManager::parsePayload(const char *payload, size_t len) {
-    // copy into a null-terminated buffer (payload may not be null-terminated)
+    // might change this back to char* but string was was easier
     std::string s(payload, len);
     // find separator
     size_t semi = s.find(';');
     if (semi == std::string::npos) {
-        Serial.println("WS parse: no ';' found.");
+        Serial.println("WS parse: no ';' found."); // payload malformed (i stole this)
         return;
     }
     std::string s_part = s.substr(0, semi);
@@ -158,13 +155,6 @@ void WifiManager::parsePayload(const char *payload, size_t len) {
     for (int i = 0; i < 5; ++i) controlState.sliders[i] = temp_sliders[i];
     for (int i = 0; i < 4; ++i) controlState.dropdowns[i] = temp_dd[i];
 
-    /*
-    Serial.print("Parsed sliders: ");
-    for (int i = 0; i < 5; ++i) { Serial.print(controlState.sliders[i], 3); Serial.print(" "); }
-    Serial.print(" dropdowns: ");
-    for (int i = 0; i < 4; ++i) { Serial.print(controlState.dropdowns[i]); Serial.print(" "); }
-    Serial.println();
-    */
 }
 
 void WifiManager::getControlState(ControlState* out) {
@@ -186,13 +176,13 @@ void WifiManager::startWeb() {
     server.addHandler(&ws);
 
     server.begin();
-    Serial.println("HTTP server started.");
+    Serial.println("http server started");
     active = true;
 }
 
 bool WifiManager::connectWiFi(const WiFiNetwork &net) {
 
-    Serial.printf("Trying to connect to SSID: %s\n", net.ssid.c_str());
+    Serial.printf("Connecting to SSID: %s\n", net.ssid.c_str());
     WiFi.mode(WIFI_STA);
     WiFi.disconnect(true, true);
     WiFi.begin(net.ssid.c_str(), net.password.c_str());
@@ -205,7 +195,6 @@ bool WifiManager::connectWiFi(const WiFiNetwork &net) {
     Serial.println();
     wl_status_t success = WiFi.status();
     if(success == WL_CONNECTED) {
-        Serial.printf("\nConnected. IP: %s\n", WiFi.localIP().toString().c_str());
         lastNetwork = net; 
     }
 
@@ -216,12 +205,12 @@ void WifiManager::setupEvents() {
     WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info) {
         switch (event) {
             case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-                Serial.println("WiFi disconnected!");
+                Serial.println("WiFi disconnected");
                 mcp->digitalWrite(1, LOW);
                 break;
 
             case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-                Serial.println("WiFi connected.");
+                Serial.println("WiFi connected");
                 break;
 
             case ARDUINO_EVENT_WIFI_STA_GOT_IP:

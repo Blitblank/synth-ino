@@ -18,7 +18,7 @@ void App::init() {
     Serial.begin(115200);
     utils::serialLog(appTaskHandle, xTaskGetTickCount(), "App init.");
 
-    Wire.begin(I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO, I2C_MASTER_FREQ_HZ); // TODO: add these pins to pins.h file
+    Wire.begin(I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO, I2C_MASTER_FREQ_HZ);
     if (!mcp.begin_I2C()) {
         Serial.println("mcp i2c init failure"); // TODO: standardize output logging
     } else {
@@ -26,12 +26,12 @@ void App::init() {
         mcp.pinMode(STATUS_LED_2, OUTPUT);
         mcp.pinMode(STATUS_LED_3, OUTPUT);
         mcp.pinMode(STATUS_LED_4, OUTPUT);
-        // TODO: also these io expanded pins too
     }
     mcp.digitalWrite(STATUS_LED_1, LOW);
     mcp.digitalWrite(STATUS_LED_2, LOW);
     mcp.digitalWrite(STATUS_LED_3, LOW);
     mcp.digitalWrite(STATUS_LED_4, LOW);
+    // might make a class for the mcp too 
 
     i2sInit();
     disk.init(&mcp);
@@ -50,7 +50,6 @@ void App::wifiTask() {
     utils::serialLog(wifiTaskHandle, xTaskGetTickCount(), "Wifi task start.");
 
     wifiManager.init(&disk, &mcp);
-    // TODO: when i2c module is installed, turn on an LED to indicate webserver status
     
     vTaskDelete(NULL);
 

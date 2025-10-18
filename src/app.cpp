@@ -22,16 +22,16 @@ void App::init() {
     if (!mcp.begin_I2C()) {
         Serial.println("mcp i2c init failure"); // TODO: standardize output logging
     } else {
-        mcp.pinMode(0, OUTPUT); // LED 2
-        mcp.pinMode(1, OUTPUT); // LED 1
-        mcp.pinMode(8, OUTPUT); // LED 3
-        mcp.pinMode(9, OUTPUT); // LED 4
+        mcp.pinMode(STATUS_LED_1, OUTPUT);
+        mcp.pinMode(STATUS_LED_2, OUTPUT);
+        mcp.pinMode(STATUS_LED_3, OUTPUT);
+        mcp.pinMode(STATUS_LED_4, OUTPUT);
         // TODO: also these io expanded pins too
     }
-    mcp.digitalWrite(0, LOW);
-    mcp.digitalWrite(1, LOW);
-    mcp.digitalWrite(8, LOW);
-    mcp.digitalWrite(9, LOW);
+    mcp.digitalWrite(STATUS_LED_1, LOW);
+    mcp.digitalWrite(STATUS_LED_2, LOW);
+    mcp.digitalWrite(STATUS_LED_3, LOW);
+    mcp.digitalWrite(STATUS_LED_4, LOW);
 
     i2sInit();
     disk.init(&mcp);
@@ -136,9 +136,9 @@ void App::i2sInit() {
     };
 
     i2s_pin_config_t pinConfig = {
-        .bck_io_num = 40, // TODO: add these to the pins.h file
-        .ws_io_num  = 38,
-        .data_out_num = 39,
+        .bck_io_num = BCK,
+        .ws_io_num  = WS,
+        .data_out_num = DO,
         .data_in_num = I2S_PIN_NO_CHANGE
     };
 

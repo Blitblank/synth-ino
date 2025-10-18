@@ -44,16 +44,15 @@ int32_t Oscillator::sample() {
     // h(x) = f(x + m*g(x))
     // f(x) = carrier, g(x) = modulator
 
-    // TODO: camelCase
-    int32_t modulator_sample = fsampleWavetable(wavetable3, phase);
-    uint32_t u_modulator_sample = (uint32_t)(modulator_sample + INT32_MAX);
-    uint64_t modulation_offset = ((uint64_t)u_modulator_sample * (uint64_t)modulationDepth) >> 32;
-    uint32_t x = phase + (uint32_t)modulation_offset; // modulated phase
+    int32_t modulatorSample = fsampleWavetable(wavetable3, phase);
+    uint32_t uModulatorSample = (uint32_t)(modulatorSample + INT32_MAX);
+    uint64_t modulationOffset = ((uint64_t)uModulatorSample * (uint64_t)modulationDepth) >> 32;
+    uint32_t x = phase + (uint32_t)modulationOffset; // modulated phase
 
-    int32_t c_s1 = fsampleWavetable(wavetable1, x);
-    int32_t c_s2 = fsampleWavetable(wavetable2, x);
-    int64_t sample_64 = (int64_t)c_s1*(~carrierInterpolation) + (int64_t)c_s2*(carrierInterpolation); // interpolate between two wavetables
-    int32_t pmSample = (int32_t)(sample_64 >> 32);
+    int32_t s1 = fsampleWavetable(wavetable1, x);
+    int32_t s2 = fsampleWavetable(wavetable2, x);
+    int64_t sample64 = (int64_t)s1*(~carrierInterpolation) + (int64_t)s2*(carrierInterpolation); // interpolate between two wavetables
+    int32_t pmSample = (int32_t)(sample64 >> 32);
 
     return pmSample;
 

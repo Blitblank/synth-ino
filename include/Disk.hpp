@@ -27,13 +27,6 @@ public:
 
 private:
 
-    // TODO: add these pins to the arduino_pins.h file
-    const uint8_t chipSelect = 6;
-    const uint8_t dataOut = 4;
-    const uint8_t dataIn = 5;
-    const uint8_t clock = 7;
-    const uint8_t cardDetect = 8;
-
 	Adafruit_MCP23X17* mcp;
 
 };

@@ -10,8 +10,8 @@ void Disk::init(Adafruit_MCP23X17* io) {
 	mcp = io;
 
 	SPIClass spi = SPIClass(3);
-	spi.begin(clock, dataOut, dataIn, chipSelect);
-	if (!SD.begin(chipSelect, spi, 1000000)) {
+	spi.begin(SCK, MISO, MOSI, SS);
+	if (!SD.begin(SS, spi, 1000000)) {
 		Serial.println("SD init failed");
 	} else {
 		mcp->digitalWrite(0, HIGH);

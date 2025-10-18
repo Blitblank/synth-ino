@@ -99,7 +99,7 @@ void App::ioTask() {
 
         //Serial.printf("time diff of oled.draw: %d \n", end-start);
 
-        vTaskDelay(20); // ms
+        vTaskDelay(50); // ms
     }
 
 }

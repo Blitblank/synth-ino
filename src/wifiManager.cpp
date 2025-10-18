@@ -1,43 +1,6 @@
 
 #include "WifiManager.hpp"
 
-// TODO: read web page from html file on sd card
-const char *slider_html =
-        "<!DOCTYPE html><html><body>"
-        "<h2>Phase Modulation</h2>"
-        "<input type='range' min='0' max='1' step='0.01' value='0.0' id='s1'>Interpolate between C1 & C2<br>"
-        "<input type='range' min='40' max='400' step='0.01' value='0.0' id='s2'>pitch (40hz -> 400hz)<br>"
-        "<input type='range' min='0' max='1' step='0.01' value='0.0' id='s3'>Phase Modulation Depth<br>"
-        "<input type='range' min='0' max='1' step='0.01' value='0.5' id='s4'>Low-Pass Filter Cutoff<br>"
-        "<input type='range' min='0' max='1' step='0.01' value='0.5' id='s5'>Low-Pass Filter Resonance<br>"
-        "<h3>Wave Selectors</h3>"
-        "<div>Carrier 1: <select id='d1'>"
-        "<option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option>"
-        "<option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option>"
-        "</select><br></div>"
-        "<div>Carrier 2: <select id='d2'>"
-        "<option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option>"
-        "<option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option>"
-        "</select><br></div>"
-        "<div>Modulator 1: <select id='d3'>"
-        "<option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option>"
-        "<option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option>"
-        "</select><br></div>"
-        "<div>nothing<select id='d4'>"
-        "<option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option>"
-        "<option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option>"
-        "</select><br></div>"
-        "<script>"
-        "let ws = new WebSocket('ws://' + location.host + '/ws');"
-        "function sendSliders() {"
-        "  let s = [1,2,3,4,5].map(i => document.getElementById('s'+i).value).join(',');"
-        "  let d = [1,2,3,4].map(i => document.getElementById('d'+i).value).join(',');"
-        "  ws.send(s + ';' + d);"
-        "}"
-        "setInterval(sendSliders, 100);"
-        "</script>"
-        "</body></html>";
-
 WifiManager::WifiManager() {
     // initialize control sate mainly
     for (int i = 0; i < 3; i++) controlState.sliders[i] = 0.0f;
@@ -57,11 +20,10 @@ void WifiManager::init(Disk* disk, Adafruit_MCP23X17* io) {
 
     // TODO: move file related tasks to disk class
     // probably call the function and return a vector
-    const char *path = "wifi-networks/networks.txt";
-    File file = SD.open(path);
+    const char *path = "/wifi-networks.txt";
+    File file = SPIFFS.open(path, FILE_READ);
     if (!file) {
         Serial.println("Failed to open networks file!");
-        //return;
     }
 
     // fill vector according to file. might move this according to comment above
@@ -87,8 +49,6 @@ void WifiManager::init(Disk* disk, Adafruit_MCP23X17* io) {
     std::sort(networks.begin(), networks.end(), [](const WiFiNetwork &a, const WiFiNetwork &b) {
         return a.priority < b.priority;
     });
-
-    networks.push_back(WiFiNetwork{"attinternet", "homeburger#sama", 1});
 
     // connect to wifi networks in order
     bool connected = false;
@@ -215,7 +175,7 @@ void WifiManager::getControlState(ControlState* out) {
 void WifiManager::startWeb() {
     // serve html
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(200, "text/html", slider_html);
+        request->send(SPIFFS, "/index.html", "text/html");
     });
 
     // bind websocket

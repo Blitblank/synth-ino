@@ -9,14 +9,13 @@ void Disk::init(Adafruit_MCP23X17* io) {
 
 	mcp = io;
 
-	SPIClass spi = SPIClass(3);
-	spi.begin(SCK, MISO, MOSI, SS);
-	if (!SD.begin(SS, spi, 1000000)) {
-		Serial.println("SD init failed");
+	//SPIClass spi = SPIClass(3);
+	//spi.begin(SCK, MISO, MOSI, SS);
+	if (!SPIFFS.begin(true)) {
+		Serial.println("spiffs mount failed");
 	} else {
 		mcp->digitalWrite(0, HIGH);
 	}
-	// TODO: notify some led that this component isnt functioning
 
 }
 
@@ -36,15 +35,15 @@ bool Disk::parseNetworkLine(const String &line, WiFiNetwork &net) {
 }
 
 void Disk::editNetworkFile(const std::vector<WiFiNetwork> &nets, const char *path) {
-    File file = SD.open(path, FILE_WRITE);
+	File file = SPIFFS.open(path, FILE_WRITE);
     if (!file) {
         Serial.println("Failed to open file for writing!");
         return;
     }
 
     // erase file and reopen
-    SD.remove(path);
-    file = SD.open(path, FILE_WRITE);
+    SPIFFS.remove(path);
+    file = SPIFFS.open(path, FILE_WRITE);
 
     for (const auto &net : nets) {
     file.printf("ssid: {%s} password: {%s} priority: %d\n",

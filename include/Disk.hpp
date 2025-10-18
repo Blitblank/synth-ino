@@ -6,6 +6,7 @@
 #include "SD.h"
 #include "SPI.h"
 #include "vector" // TODO: use fixed arrays instead
+#include "SPIFFS.h"
 #include "Adafruit_MCP23X17.h"
 
 // i dont like this being here but whatever
@@ -28,6 +29,7 @@ public:
 private:
 
 	Adafruit_MCP23X17* mcp;
+	
 
 };
 

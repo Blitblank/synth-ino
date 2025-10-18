@@ -8,6 +8,7 @@ namespace utils {
 
 static void serialLog(const char* handle, uint32_t timestamp, char* message) {
 
+    // TODO: make equal spacings
     Serial.print(handle);
     Serial.print(", ");
     Serial.print(timestamp);

@@ -73,8 +73,6 @@ void Synth::init() {
     wavelength = (uint32_t)((double)sampleRate * wavelength_constant / frequency + 0.5); // scope width
     triggerOffset = (uint32_t)((wavelength_constant - 1.0)/2.0 * (double)wavelength + 0.5); // padding for oscilloscope waveform
 
-    Serial.printf("freq=%lf wavelength=%u offset=%u", frequency, wavelength, triggerOffset);
-
     oscillator1.setPhaseInc(phaseIncrements[midiNote]);
     oscillator2.setPhaseInc(phaseIncrements[midiNote]*4); // 2 octaves above
     oscillator3.setPhaseInc(phaseIncrements[midiNote]*4*3/2); // 2 octaves+5th above

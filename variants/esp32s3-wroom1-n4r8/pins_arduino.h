@@ -25,5 +25,4 @@
 #define STATUS_LED_3 8
 #define STATUS_LED_4 9
 
-
 static const uint8_t LED_BUILTIN = PIN_LED;

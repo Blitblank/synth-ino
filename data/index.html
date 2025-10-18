@@ -1,4 +1,12 @@
-<!DOCTYPE html><html><body>
+<!DOCTYPE html><html>
+<head>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wdth,wght@0,75..100,100..900;1,75..100,100..900&display=swap" rel="stylesheet">
+</head>
+
+
+<body>
 
 <h2>Phase Modulation</h2>
 
@@ -30,6 +38,9 @@
 <option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option>
 </select><br></div>
 
+<link href='https://fonts.googleapis.com/css?family=Sofia' rel='stylesheet'>
+
+
 <script>
 
 let ws = new WebSocket('ws://' + location.host + '/ws');
@@ -41,4 +52,20 @@ function sendSliders() {
 setInterval(sendSliders, 100);
 
 </script>
+
+
+<style>
+
+body {
+    font-family: "Roboto", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-style: normal;
+    font-variation-settings:
+        "wdth" 80;
+}
+
+</style>
+
+
 </body></html>

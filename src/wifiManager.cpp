@@ -21,7 +21,7 @@ void WifiManager::init(Disk* disk, Adafruit_MCP23X17* io) {
     // TODO: move file related tasks to disk class
     // probably call the function and return a vector
     const char *path = "/wifi-networks.txt";
-    File file = SPIFFS.open(path, FILE_READ);
+    File file = LittleFS.open(path, FILE_READ);
     if (!file) {
         Serial.println("networks file not found");
     }
@@ -44,11 +44,6 @@ void WifiManager::init(Disk* disk, Adafruit_MCP23X17* io) {
         Serial.println("no valid network entries found");
         //return;
     }
-
-    // sort vector by priorty (priority 1=first)
-    std::sort(networks.begin(), networks.end(), [](const WiFiNetwork &a, const WiFiNetwork &b) {
-        return a.priority < b.priority;
-    });
 
     // connect to wifi networks in order
     bool connected = false;
@@ -165,9 +160,15 @@ void WifiManager::getControlState(ControlState* out) {
 void WifiManager::startWeb() {
     // serve html
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(SPIFFS, "/index.html", "text/html");
+        request->send(LittleFS, "/index.html", "text/html");
     });
 
+    /* example for different routes. settings.html sits in root of the FS mount
+    server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(LittleFS, "/settings.html", "text/html");
+    });
+    */
+    
     // bind websocket
     ws.onEvent([this](AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
         {

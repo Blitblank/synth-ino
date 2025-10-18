@@ -1,0 +1,6 @@
+ssid: {network1} password: {password1}
+ssid: {network2} password: {password2}
+
+# change the name of this file to wifi-networks.txt
+# networks are attempted to connect in order from top to bottom
+# the last connected network is moved to the top

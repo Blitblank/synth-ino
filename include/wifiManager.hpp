@@ -6,7 +6,7 @@
 #include "AsyncTCP.h"
 #include <ESPAsyncWebServer.h>
 #include "Disk.hpp"
-#include <SPIFFS.h>
+#include <LittleFS.h>
 #include <Adafruit_MCP23X17.h>
 
 struct ControlState {

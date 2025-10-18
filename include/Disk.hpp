@@ -6,14 +6,13 @@
 #include "SD.h"
 #include "SPI.h"
 #include "vector" // TODO: use fixed arrays instead
-#include "SPIFFS.h"
+#include "LittleFS.h"
 #include "Adafruit_MCP23X17.h"
 
 // i dont like this being here but whatever
 struct WiFiNetwork {
 	String ssid;
 	String password;
-	int priority;
 };
 
 class Disk {
@@ -22,6 +21,7 @@ public:
     Disk();
     ~Disk() = default;
 
+    // TODO: abstract file system operations for the option of using littlefs or the sd card
     void init(Adafruit_MCP23X17* io);
     bool parseNetworkLine(const String &line, WiFiNetwork &net);
     void editNetworkFile(const std::vector<WiFiNetwork> &nets, const char *path);

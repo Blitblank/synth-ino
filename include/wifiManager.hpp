@@ -45,7 +45,7 @@ private:
     AsyncWebServer server{ 80 };
     AsyncWebSocket ws{ "/ws" };
 
-    Adafruit_MCP23X17 mcp;
+    Adafruit_MCP23X17* mcp;
 
 	// TODO: add an info logger in the webpage for status updates
 	// a console side by side a terminal would be so cool

@@ -5,12 +5,16 @@ Disk::Disk() {
 
 }
 
-void Disk::init() {
+void Disk::init(Adafruit_MCP23X17* io) {
 
-	SPIClass spi = SPIClass(HSPI);
+	mcp = io;
+
+	SPIClass spi = SPIClass(3);
 	spi.begin(clock, dataOut, dataIn, chipSelect);
-	if (!SD.begin(chipSelect)) {
+	if (!SD.begin(chipSelect, spi, 1000000)) {
 		Serial.println("SD init failed");
+	} else {
+		mcp->digitalWrite(0, HIGH);
 	}
 	// TODO: notify some led that this component isnt functioning
 

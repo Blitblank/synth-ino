@@ -49,8 +49,7 @@ WifiManager::WifiManager() {
 
 void WifiManager::init(Disk* disk, Adafruit_MCP23X17* io) {
 
-    io = &mcp;
-    mcp.digitalWrite(1, HIGH);
+    mcp = io;
 
     setupEvents();
     WiFi.setAutoReconnect(true);
@@ -258,7 +257,7 @@ void WifiManager::setupEvents() {
         switch (event) {
             case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
                 Serial.println("WiFi disconnected!");
-                mcp.digitalWrite(1, LOW);
+                mcp->digitalWrite(1, LOW);
                 break;
 
             case ARDUINO_EVENT_WIFI_STA_CONNECTED:
@@ -267,7 +266,7 @@ void WifiManager::setupEvents() {
 
             case ARDUINO_EVENT_WIFI_STA_GOT_IP:
                 Serial.printf("Got IP: %s\n", WiFi.localIP().toString().c_str());
-                mcp.digitalWrite(1, HIGH);
+                mcp->digitalWrite(1, HIGH);
                 break;
 
             default:

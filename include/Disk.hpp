@@ -6,6 +6,7 @@
 #include "SD.h"
 #include "SPI.h"
 #include "vector" // TODO: use fixed arrays instead
+#include "Adafruit_MCP23X17.h"
 
 // i dont like this being here but whatever
 struct WiFiNetwork {
@@ -20,7 +21,7 @@ public:
     Disk();
     ~Disk() = default;
 
-    void init();
+    void init(Adafruit_MCP23X17* io);
     bool parseNetworkLine(const String &line, WiFiNetwork &net);
     void editNetworkFile(const std::vector<WiFiNetwork> &nets, const char *path);
 
@@ -32,6 +33,8 @@ private:
     const uint8_t dataIn = 5;
     const uint8_t clock = 7;
     const uint8_t cardDetect = 8;
+
+	Adafruit_MCP23X17* mcp;
 
 };
 

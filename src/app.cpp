@@ -18,12 +18,9 @@ void App::init() {
     Serial.begin(115200);
     utils::serialLog(appTaskHandle, xTaskGetTickCount(), "App init.");
 
-    i2sInit();
-    disk.init();
-
     Wire.begin(I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO, I2C_MASTER_FREQ_HZ); // TODO: add these pins to pins.h file
     if (!mcp.begin_I2C()) {
-        Serial.println("mcp i2c init failure");
+        Serial.println("mcp i2c init failure"); // TODO: standardize output logging
     } else {
         mcp.pinMode(0, OUTPUT); // LED 2
         mcp.pinMode(1, OUTPUT); // LED 1
@@ -35,6 +32,9 @@ void App::init() {
     mcp.digitalWrite(1, LOW);
     mcp.digitalWrite(8, LOW);
     mcp.digitalWrite(9, LOW);
+
+    i2sInit();
+    disk.init(&mcp);
 }
 
 void App::main() {

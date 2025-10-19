@@ -67,7 +67,7 @@ void WifiManager::init(Disk* disk, Adafruit_MCP23X17* io) {
             disk->editNetworkFile(networks, path);
         }
     } else {
-        Serial.println("Failed to connect to the configured networks"); // big fat failure
+        Serial.println("Failed to connect to the configured networks."); // big fat failure
     }
 
     startWeb();
@@ -81,12 +81,21 @@ void WifiManager::handleWsEvent(AsyncWebSocket* serverPtr, AsyncWebSocketClient*
     } else if (type == WS_EVT_DISCONNECT) {
         Serial.printf("WS: client #%u disconnected\n", client->id());
     } else if (type == WS_EVT_DATA) {
-        // ws payload needs to be error checked
-        std::string payload;
-        payload.assign((char*)data, len);
+        AwsFrameInfo *info = (AwsFrameInfo*)arg;
 
-        // parse and store
-        parsePayload(payload.c_str(), payload.size());
+        if (info->final && info->index == 0 && info->len == len) { // full ws message
+            std::string payload((char*)data, len);
+            parsePayload(payload.c_str(), payload.size());
+        } 
+        else { // multi-frame message needs to be assembled
+            static std::string buffer;
+            if (info->index == 0) buffer.clear();
+            buffer.append((char*)data, len);
+            if (info->final) {
+                parsePayload(buffer.c_str(), buffer.size());
+                buffer.clear();
+            }
+        }
     }
 }
 
@@ -159,11 +168,10 @@ void WifiManager::getControlState(ControlState* out) {
 
 void WifiManager::startWeb() {
     // serve html
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(LittleFS, "/index.html", "text/html");
-    });
+    server.serveStatic("/", LittleFS, "/index/").setDefaultFile("index.html");
+    // server.serveStatic("/settings", LittleFS, "/settings/").setDefaultFile("index.html"); // <= example for a separate page at a different endpoint
 
-    /* example for different routes. settings.html sits in root of the FS mount
+    /* this code is useful for api endpoints but not static webpages
     server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(LittleFS, "/settings.html", "text/html");
     });
@@ -177,7 +185,7 @@ void WifiManager::startWeb() {
     server.addHandler(&ws);
 
     server.begin();
-    Serial.println("http server started");
+    Serial.println("Http server started.");
     active = true;
 }
 
@@ -206,12 +214,12 @@ void WifiManager::setupEvents() {
     WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info) {
         switch (event) {
             case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-                Serial.println("WiFi disconnected");
+                Serial.println("WiFi disconnected.");
                 mcp->digitalWrite(1, LOW);
                 break;
 
             case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-                Serial.println("WiFi connected");
+                Serial.println("WiFi connected.");
                 break;
 
             case ARDUINO_EVENT_WIFI_STA_GOT_IP:

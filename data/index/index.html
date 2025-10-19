@@ -1,5 +1,8 @@
 <!DOCTYPE html><html>
 <head>
+
+<link rel="stylesheet" href="styles.css">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wdth,wght@0,75..100,100..900;1,75..100,100..900&display=swap" rel="stylesheet">
@@ -8,7 +11,7 @@
 
 <body>
 
-<h2>Phase Modulation</h2>
+<h2>soburg</h2>
 
 <input type='range' min='0' max='1' step='0.01' value='0.0' id='s1'>Interpolate between C1 & C2<br>
 <input type='range' min='40' max='400' step='0.01' value='0.0' id='s2'>pitch (40hz -> 400hz)<br>
@@ -38,34 +41,6 @@
 <option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option>
 </select><br></div>
 
-<link href='https://fonts.googleapis.com/css?family=Sofia' rel='stylesheet'>
-
-
-<script>
-
-let ws = new WebSocket('ws://' + location.host + '/ws');
-function sendSliders() {
-    let s = [1,2,3,4,5].map(i => document.getElementById('s'+i).value).join(',');
-    let d = [1,2,3,4].map(i => document.getElementById('d'+i).value).join(',');
-    ws.send(s + ';' + d);
-}
-setInterval(sendSliders, 100);
-
-</script>
-
-
-<style>
-
-body {
-    font-family: "Roboto", sans-serif;
-    font-optical-sizing: auto;
-    font-weight: 500;
-    font-style: normal;
-    font-variation-settings:
-        "wdth" 80;
-}
-
-</style>
-
+<script src="index.js"></script>
 
 </body></html>

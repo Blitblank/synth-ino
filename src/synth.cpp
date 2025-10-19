@@ -82,15 +82,15 @@ void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWave
 
     // modify oscillator parameters based on the controls
     // TODO: process control values in either payload parsing or in javascript
-    uint32_t carrierInterpolation = (uint32_t)(controls->sliders[0] * (float)UINT32_MAX);
+    uint32_t carrierInterpolation = (uint32_t)(controls->sliders[1] * (float)UINT32_MAX);
     uint32_t modulationDepth = (uint32_t)(controls->sliders[2] * (1 << (32-2)));
-    float lpfCutoff = powf(controls->sliders[3], 4.0f) * (float)sampleRate/2.1f + 1.0f; // max cutoff at nyquist freq
-    float lpfResonance = powf(controls->sliders[4], 1.0f) * 10.0f; // the pow function gives more precision at lower frequencies
+    float lpfCutoff = controls->sliders[3] + 0.1f;
+    float lpfResonance = controls->sliders[4];
     // TODO: get rid of floating point operations because it bottlenecks to 24 bit precision
     filter1.biquadCalculateLowpass(lpfCutoff, lpfResonance, (float)sampleRate);
 
     // this is just for a demo, remove when midi 
-    float freq = controls->sliders[1];
+    float freq = controls->sliders[0];
     float inc  = freq / (float)(sampleRate) * (float)(WAVETABLE_SIZE);
     uint32_t inc_q = (uint32_t)(inc * (1u << PHASE_PRECISION) + 0.5);
     oscillator1.setPhaseInc(inc_q);

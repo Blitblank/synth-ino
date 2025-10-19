@@ -1,46 +1,43 @@
-<!DOCTYPE html><html>
+<!doctype html>
+<html lang="en">
 <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Soburg Synth Control Panel</title>
 
-<link rel="stylesheet" href="styles.css">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wdth,wght@0,75..100,100..900;1,75..100,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href=":ital,wdth,wght@0,75..100,100..900;1,75..100,100..900&display=swap" rel="stylesheet">
+
 </head>
-
-
 <body>
 
-<h2>soburg</h2>
+    <div class="title">♫ Synth Control Panel ♫</div>
+    <div id="slider-container" class="slider-container">
+        <div class="slider-block" data-id="1" label="Frequency"               min="40" max="400"   step="0.1"  value="280"></div>
+        <div class="slider-block" data-id="2" label="Carrier Interpolation"   min="0"  max="1"     step="0.01" value="0"></div>
+        <div class="slider-block" data-id="3" label="Phase Modulation Depth"  min="0"  max="3"     step="0.1"  value="0"></div>
+        <div class="slider-block" data-id="4" label="Filter Center Frequency" min="20" max="20000" step="10"   value="12000"></div>
+        <div class="slider-block" data-id="5" label="Filter Resonance"        min="0"  max="8"     step="0.1"  value="0.7"></div>
+    </div>
+    <!-- TODO: make these into components too -->
+    <div id="dropdown-container">
+        <div>Carrier 1: <select id='d1'>
+            <option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option>
+        </select><br></div>
+        <div>Carrier 2: <select id='d2'>
+            <option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option>
+        </select><br></div>
+        <div>Carrier Modulator: <select id='d3'>
+            <option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option>
+        </select><br></div>
+    </div>
 
-<input type='range' min='0' max='1' step='0.01' value='0.0' id='s1'>Interpolate between C1 & C2<br>
-<input type='range' min='40' max='400' step='0.01' value='0.0' id='s2'>pitch (40hz -> 400hz)<br>
-<input type='range' min='0' max='1' step='0.01' value='0.0' id='s3'>Phase Modulation Depth<br>
-<input type='range' min='0' max='1' step='0.01' value='0.5' id='s4'>Low-Pass Filter Cutoff<br>
-<input type='range' min='0' max='1' step='0.01' value='0.5' id='s5'>Low-Pass Filter Resonance<br>
+    <script src="sliders.js"></script>
+    <script src="index.js"></script>
 
-<h3>Wave Selectors</h3>
-
-<div>Carrier 1: <select id='d1'>
-<option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option>
-<option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option>
-</select><br></div>
-
-<div>Carrier 2: <select id='d2'>
-<option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option>
-<option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option>
-</select><br></div>
-
-<div>Modulator 1: <select id='d3'>
-<option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option>
-<option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option>
-</select><br></div>
-
-<div>nothing<select id='d4'>
-<option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option>
-<option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option>
-</select><br></div>
-
-<script src="index.js"></script>
-
-</body></html>
+</body>
+</html>

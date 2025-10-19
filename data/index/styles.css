@@ -1,9 +1,20 @@
 
-body {
-    font-family: "Roboto", sans-serif;
-    font-optical-sizing: auto;
-    font-weight: 500;
-    font-style: normal;
-    font-variation-settings:
-        "wdth" 80;
+body { 
+    padding: 18px; display: flex; align-items: center; justify-content: center; flex-direction: column;
+    font-family: "Roboto", sans-serif; font-optical-sizing: auto; font-weight: 600; font-style: normal; font-variation-settings: "wdth" 75;
+    font-size: 16px;
 }
+
+.title { font-size: 24px; font-weight: 600; }
+
+.slider-container { margin-right: 100px; }
+.slider-block{ width: 100%; display: flex; align-items: center; flex-direction: row; justify-content: center; margin: 8px; gap: 10px; }
+.slider-block input{ width: 2; }
+.slider-block #slider { flex:0.2; height:20px; }
+.slider-block .slider-label { width: 200px; text-align: right; }
+
+input[type="text"], input[type="number"] {
+    padding:6px 8px; border:1px solid #ccc; border-radius:6px; font-size:14px; width:40px; text-align: center;
+}
+
+/* TODO: style dropdowns */

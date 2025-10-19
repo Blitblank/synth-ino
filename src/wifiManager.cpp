@@ -80,6 +80,7 @@ void WifiManager::handleWsEvent(AsyncWebSocket* serverPtr, AsyncWebSocketClient*
         // TODO: send current synth config values to sync with client
     } else if (type == WS_EVT_DISCONNECT) {
         Serial.printf("WS: client #%u disconnected\n", client->id());
+        // TODO: we have the led bandwidth to allocate one of them to an active websocket connection
     } else if (type == WS_EVT_DATA) {
         AwsFrameInfo *info = (AwsFrameInfo*)arg;
 
@@ -169,12 +170,13 @@ void WifiManager::getControlState(ControlState* out) {
 void WifiManager::startWeb() {
     // serve html
     server.serveStatic("/", LittleFS, "/index/").setDefaultFile("index.html");
-    // server.serveStatic("/settings", LittleFS, "/settings/").setDefaultFile("index.html"); // <= example for a separate page at a different endpoint
+    server.serveStatic("/terminal", LittleFS, "/terminal/").setDefaultFile("index.html");
 
-    /* this code is useful for api endpoints but not static webpages
+    /* this code is useful for custom endpoints but not static webpages
     server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(LittleFS, "/settings.html", "text/html");
     });
+    keeping this here for future reference
     */
     
     // bind websocket
@@ -183,6 +185,9 @@ void WifiManager::startWeb() {
             this->handleWsEvent(server, client, type, arg, data, len);
         });
     server.addHandler(&ws);
+
+    // TODO: when the web client returns an error on accessing the websocket, it should send an http req to re-open it
+    // it can be an endpoint added here
 
     server.begin();
     Serial.println("Http server started.");
@@ -225,6 +230,7 @@ void WifiManager::setupEvents() {
             case ARDUINO_EVENT_WIFI_STA_GOT_IP:
                 Serial.printf("Got IP: %s\n", WiFi.localIP().toString().c_str());
                 mcp->digitalWrite(1, HIGH);
+                // TODO: maybe flash ip address on oled screen for a few seconds or until it gets an http request
                 break;
 
             default:

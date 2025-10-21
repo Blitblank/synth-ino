@@ -58,7 +58,7 @@ void App::wifiTask() {
 
         uint32_t lastTime = 0;
         if (xTaskGetTickCount() - lastTime > pingInterval) {
-            wifiManager.pingClients();
+            //wifiManager.pingClients();
             lastTime = millis();
         }
 

@@ -51,39 +51,39 @@ void WifiManager::init(Disk* disk, Adafruit_MCP23X17* io) {
 void WifiManager::handleWsEvent(AsyncWebSocket* serverPtr, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len) {
 
     switch (type) {
-    case WS_EVT_CONNECT:
-        Serial.printf("WS: client #%u connected\n", client->id());
-        mcp->digitalWrite(STATUS_LED_3, HIGH;
-        // TODO: send current synth config values to sync with client
-        break;
-
-    case WS_EVT_DISCONNECT:
-        Serial.printf("WS: client #%u disconnected\n", client->id());
-        mcp->digitalWrite(STATUS_LED_3, LOW);
-        break;
-
-    case WS_EVT_DATA:
-        AwsFrameInfo *info = (AwsFrameInfo*)arg;
-
-        if (info->final && info->index == 0 && info->len == len) { // full ws message
-            std::string payload((char*)data, len);
-            parsePayload(payload.c_str(), payload.size());
-        } 
-        else { // multi-frame message needs to be assembled
-            static std::string buffer;
-            if (info->index == 0) buffer.clear();
-            buffer.append((char*)data, len);
-            if (info->final) {
-                parsePayload(buffer.c_str(), buffer.size());
-                buffer.clear();
-            }
+        case WS_EVT_CONNECT: {
+            Serial.printf("WS: client #%u connected\n", client->id());
+            mcp->digitalWrite(STATUS_LED_3, HIGH);
+            // TODO: send current synth config values to sync with client
+            break;
         }
-        break;
+        case WS_EVT_DISCONNECT: {
+            Serial.printf("WS: client #%u disconnected\n", client->id());
+            mcp->digitalWrite(STATUS_LED_3, LOW);
+            break;
+        }
+        case WS_EVT_DATA: {
+            AwsFrameInfo *info = (AwsFrameInfo*)arg;
 
-    case WS_EVT_PONG:
-        Serial.println("WS: Received PONG");
-        break;
-        
+            if (info->final && info->index == 0 && info->len == len) { // full ws message
+                std::string payload((char*)data, len);
+                parsePayload(payload.c_str(), payload.size());
+            } 
+            else { // multi-frame message needs to be assembled
+                static std::string buffer;
+                if (info->index == 0) buffer.clear();
+                buffer.append((char*)data, len);
+                if (info->final) {
+                    parsePayload(buffer.c_str(), buffer.size());
+                    buffer.clear();
+                }
+            }
+            break;
+        }
+        case WS_EVT_PONG: {
+            Serial.println("WS: Received PONG");
+            break;
+        }
     }
 }
 
@@ -94,6 +94,7 @@ void WifiManager::parsePayload(const char *payload, size_t len) {
     // example payload: "50,50,50,50,50;1,2,3,4"
     size_t semi = s.find(';');
     if (semi == std::string::npos) {
+        Serial.println(payload);
         Serial.println("WS parse: no ';' found."); // payload malformed (i stole this)
         return;
     }
@@ -220,7 +221,7 @@ void WifiManager::setupEvents() {
 
             case ARDUINO_EVENT_WIFI_STA_GOT_IP:
                 ipAddress = WiFi.localIP().toString();
-                Serial.printf("Got IP: %s\n", ipAddress);
+                Serial.printf("Got IP: %s\n", ipAddress.c_str());
                 mcp->digitalWrite(STATUS_LED_2, HIGH);
                 
                 // TODO: maybe flash ip address on oled screen for a few seconds or until it gets an http request

@@ -17,15 +17,41 @@ void Disk::init(Adafruit_MCP23X17* io) {
         if (!LittleFS.begin(true)) {
             Serial.println("Failed to mount filesystem even after format!");
         } else {
-            mcp->digitalWrite(0, HIGH);
+            mcp->digitalWrite(STATUS_LED_1, HIGH);
         }
     } else {
-        mcp->digitalWrite(0, HIGH);
+        mcp->digitalWrite(STATUS_LED_1, HIGH);
     }
 
 }
 
-bool Disk::parseNetworkLine(const String &line, WiFiNetwork &net) {
+void Disk::getNetworks(std::vector<WifiNetwork>* networks) {
+
+    File file = LittleFS.open(path, FILE_READ);
+    if (!file) {
+        Serial.println("networks file not found");
+    }
+
+    while (file.available()) {
+        String line = file.readStringUntil('\n');
+        line.trim();
+        if (line.length() == 0) continue;
+
+        WifiNetwork net;
+        if (parseNetworkLine(line, net)) {
+            networks->push_back(net);
+        }
+    }
+    file.close();
+
+    if (networks->empty()) {
+        Serial.println("no valid network entries found");
+        return;
+    }
+    return;
+}
+
+bool Disk::parseNetworkLine(const String &line, WifiNetwork &net) {
     int ssidStart = line.indexOf("{");
     int ssidEnd = line.indexOf("}", ssidStart);
     int passStart = line.indexOf("{", ssidEnd);
@@ -38,7 +64,7 @@ bool Disk::parseNetworkLine(const String &line, WiFiNetwork &net) {
     return true;
 }
 
-void Disk::editNetworkFile(const std::vector<WiFiNetwork> &nets, const char *path) {
+void Disk::editNetworkFile(const std::vector<WifiNetwork> &nets) {
 	File file = LittleFS.open(path, FILE_WRITE);
     if (!file) {
         Serial.println("Failed to open file for writing!");

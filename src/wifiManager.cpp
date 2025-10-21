@@ -5,7 +5,6 @@ WifiManager::WifiManager() {
     // initialize control sate mainly
     for (int i = 0; i < 3; i++) controlState.sliders[i] = 0.0f;
     for (int i = 0; i < 4; i++) controlState.dropdowns[i] = 0;
-    // TODO: for some reason if the filter resonance/cutoff freq (i think its cutoff) goes to zero it kills the filter
     controlState.sliders[3] = 0.5f;
     controlState.sliders[4] = 0.5f;
 }
@@ -18,32 +17,8 @@ void WifiManager::init(Disk* disk, Adafruit_MCP23X17* io) {
     WiFi.setAutoReconnect(true);
     WiFi.persistent(false);
 
-    // TODO: move file related tasks to disk class
-    // probably call the function and return a vector
-    const char *path = "/wifi-networks.txt";
-    File file = LittleFS.open(path, FILE_READ);
-    if (!file) {
-        Serial.println("networks file not found");
-    }
-
-    // def should have a vector<Network> networks = disk.GetNetworks(); function
-    std::vector<WiFiNetwork> networks;
-    while (file.available()) {
-        String line = file.readStringUntil('\n');
-        line.trim();
-        if (line.length() == 0) continue;
-
-        WiFiNetwork net;
-        if (disk->parseNetworkLine(line, net)) {
-            networks.push_back(net);
-        }
-    }
-    file.close();
-
-    if (networks.empty()) {
-        Serial.println("no valid network entries found");
-        //return;
-    }
+    std::vector<WifiNetwork> networks;
+    disk->getNetworks(&networks);
 
     // connect to wifi networks in order
     bool connected = false;
@@ -60,11 +35,11 @@ void WifiManager::init(Disk* disk, Adafruit_MCP23X17* io) {
     if (connected) {
         // resort the networks list
         if (connectedIndex > 0) {
-            WiFiNetwork successful = networks[connectedIndex];
+            WifiNetwork successful = networks[connectedIndex];
             networks.erase(networks.begin() + connectedIndex);
             networks.insert(networks.begin(), successful);
 
-            disk->editNetworkFile(networks, path);
+            disk->editNetworkFile(networks);
         }
     } else {
         Serial.println("Failed to connect to the configured networks."); // big fat failure
@@ -75,13 +50,19 @@ void WifiManager::init(Disk* disk, Adafruit_MCP23X17* io) {
 
 void WifiManager::handleWsEvent(AsyncWebSocket* serverPtr, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len) {
 
-    if (type == WS_EVT_CONNECT) {
+    switch (type) {
+    case WS_EVT_CONNECT:
         Serial.printf("WS: client #%u connected\n", client->id());
+        mcp->digitalWrite(STATUS_LED_3, HIGH;
         // TODO: send current synth config values to sync with client
-    } else if (type == WS_EVT_DISCONNECT) {
+        break;
+
+    case WS_EVT_DISCONNECT:
         Serial.printf("WS: client #%u disconnected\n", client->id());
-        // TODO: we have the led bandwidth to allocate one of them to an active websocket connection
-    } else if (type == WS_EVT_DATA) {
+        mcp->digitalWrite(STATUS_LED_3, LOW);
+        break;
+
+    case WS_EVT_DATA:
         AwsFrameInfo *info = (AwsFrameInfo*)arg;
 
         if (info->final && info->index == 0 && info->len == len) { // full ws message
@@ -97,13 +78,20 @@ void WifiManager::handleWsEvent(AsyncWebSocket* serverPtr, AsyncWebSocketClient*
                 buffer.clear();
             }
         }
+        break;
+
+    case WS_EVT_PONG:
+        Serial.println("WS: Received PONG");
+        break;
+        
     }
 }
 
+// TODO: i think having the payload be a json and using a json parsing library would make this a lot cleaner
 void WifiManager::parsePayload(const char *payload, size_t len) {
-    // might change this back to char* but string was was easier
+
     std::string s(payload, len);
-    // find separator
+    // example payload: "50,50,50,50,50;1,2,3,4"
     size_t semi = s.find(';');
     if (semi == std::string::npos) {
         Serial.println("WS parse: no ';' found."); // payload malformed (i stole this)
@@ -172,12 +160,15 @@ void WifiManager::startWeb() {
     server.serveStatic("/", LittleFS, "/index/").setDefaultFile("index.html");
     server.serveStatic("/terminal", LittleFS, "/terminal/").setDefaultFile("index.html");
 
-    /* this code is useful for custom endpoints but not static webpages
-    server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(LittleFS, "/settings.html", "text/html");
+    server.on("/start-sequence", HTTP_GET, [](AsyncWebServerRequest *request){
+        //startNoteSequence();
+        request->send(200);
     });
-    keeping this here for future reference
-    */
+
+    server.on("/stop-sequence", HTTP_GET, [](AsyncWebServerRequest *request){
+        //stopNoteSequence();
+        request->send(200);
+    });
     
     // bind websocket
     ws.onEvent([this](AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
@@ -194,7 +185,7 @@ void WifiManager::startWeb() {
     active = true;
 }
 
-bool WifiManager::connectWiFi(const WiFiNetwork &net) {
+bool WifiManager::connectWiFi(const WifiNetwork &net) {
 
     Serial.printf("Connecting to SSID: %s\n", net.ssid.c_str());
     WiFi.mode(WIFI_STA);
@@ -220,7 +211,7 @@ void WifiManager::setupEvents() {
         switch (event) {
             case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
                 Serial.println("WiFi disconnected.");
-                mcp->digitalWrite(1, LOW);
+                mcp->digitalWrite(STATUS_LED_2, LOW);
                 break;
 
             case ARDUINO_EVENT_WIFI_STA_CONNECTED:
@@ -228,8 +219,10 @@ void WifiManager::setupEvents() {
                 break;
 
             case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-                Serial.printf("Got IP: %s\n", WiFi.localIP().toString().c_str());
-                mcp->digitalWrite(1, HIGH);
+                ipAddress = WiFi.localIP().toString();
+                Serial.printf("Got IP: %s\n", ipAddress);
+                mcp->digitalWrite(STATUS_LED_2, HIGH);
+                
                 // TODO: maybe flash ip address on oled screen for a few seconds or until it gets an http request
                 break;
 

@@ -31,3 +31,4 @@ function sendSliders() {
 }
 
 setInterval(sendSliders, 100);
+// TODO: if websocket is closed, send a request to re-open

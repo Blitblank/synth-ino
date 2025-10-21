@@ -51,7 +51,18 @@ void App::wifiTask() {
 
     wifiManager.init(&disk, &mcp);
     
-    vTaskDelete(NULL);
+    const uint32_t pingInterval = 10000;
+
+    while(1) {
+        vTaskDelay(1);
+
+        uint32_t lastTime = 0;
+        if (xTaskGetTickCount() - lastTime > pingInterval) {
+            wifiManager.pingClients();
+            lastTime = millis();
+        }
+
+    }
 
 }
 
@@ -76,7 +87,6 @@ void App::audioTask() {
         i2s_write(i2sPort, i2sBuffer, sizeof(i2sBuffer), &bytesWritten, portMAX_DELAY); // esp-idf function
 
         // TODO: performance profiling of the synth generation
-        // first thing to see is compiler optimization for performance (-O2)
     }
 
 }

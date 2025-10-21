@@ -22,6 +22,8 @@ public:
 
     void init(Disk* disk, Adafruit_MCP23X17* io);
     void getControlState(ControlState* out);
+    String getIp() { return ipAddress; }
+    void pingClients() { ws.textAll("ping"); }
 
 private:
 
@@ -29,15 +31,18 @@ private:
     void parsePayload(const char *payload, size_t len);
     void startWeb();
 	void setupEvents();
-    bool connectWiFi(const WiFiNetwork &net);
+    bool connectWiFi(const WifiNetwork &net);
 
     const char* taskHandle = "WIFI_TASK";
 
 	// for handling reconnects
 	bool active = false;
-    WiFiNetwork lastNetwork;
+    WifiNetwork lastNetwork;
     bool reconnecting = false;
 	bool wifiReady = false;
+    uint32_t lastPingTime = 0;
+    uint32_t pingInterval = 10000;
+    String ipAddress = "";
 
     // Shared state instance
     ControlState controlState;

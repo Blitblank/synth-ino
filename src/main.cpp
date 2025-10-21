@@ -7,12 +7,12 @@ App app;
 
 void setup() {
 
-	pinMode(2, OUTPUT);
-	digitalWrite(2, HIGH);
+	pinMode(LED_BUILTIN, OUTPUT);
+	digitalWrite(LED_BUILTIN, HIGH);
 	delay(100);
-	digitalWrite(2, LOW);
+	digitalWrite(LED_BUILTIN, LOW);
 	delay(2000);
-	digitalWrite(2, HIGH);
+	digitalWrite(LED_BUILTIN, HIGH);
 
 	utils::serialLog("INO_SETUP", xTaskGetTickCount(), "Program setup.");
 

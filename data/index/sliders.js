@@ -44,7 +44,8 @@ function createSliderComponent(container, opts) {
     valueInput.addEventListener('keydown', (ev) => {
         if (ev.key === 'Enter') {
             ev.preventDefault();
-            const val = parseFloat(v);
+            const val = parseFloat(valueInput.value);
+            // check if its a number
             slider.value = String(val);
             valueInput.value = val;
         }

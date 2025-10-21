@@ -10,7 +10,7 @@
 #include "Adafruit_MCP23X17.h"
 
 // i dont like this being here but whatever
-struct WiFiNetwork {
+struct WifiNetwork {
 	String ssid;
 	String password;
 };
@@ -23,13 +23,15 @@ public:
 
     // TODO: abstract file system operations for the option of using littlefs or the sd card
     void init(Adafruit_MCP23X17* io);
-    bool parseNetworkLine(const String &line, WiFiNetwork &net);
-    void editNetworkFile(const std::vector<WiFiNetwork> &nets, const char *path);
+    void getNetworks(std::vector<WifiNetwork>* networks);
+    void editNetworkFile(const std::vector<WifiNetwork> &nets);
 
 private:
 
 	Adafruit_MCP23X17* mcp;
 	
+    const char *path = "/wifi-networks.txt";
 
+    bool parseNetworkLine(const String &line, WifiNetwork &net);
 };
 

@@ -68,4 +68,10 @@ private:
     // TODO: note handler (midi handler, note sequencer, etc.)
     // TODO: envelope generator 
 
+    // very basic sequence, 
+    uint8_t sequenceLength = 4;
+    uint8_t notes[4] = {49, 44, 46, 42};
+    uint32_t noteInterval = 2000; // ms
+    uint8_t noteIndex = 0;
+    uint32_t lastNoteTime = 0;
 };

@@ -95,6 +95,19 @@ void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWave
     uint32_t inc_q = (uint32_t)(inc * (1u << PHASE_PRECISION) + 0.5);
     oscillator1.setPhaseInc(inc_q);
 
+    bool sequence = true;
+    if(sequence) {
+        if((xTaskGetTickCount()-lastNoteTime) > noteInterval) {
+            lastNoteTime = xTaskGetTickCount();
+            noteIndex++;
+            if(noteIndex >= sequenceLength) {
+                noteIndex = 0;
+            }
+        }
+        uint32_t currentPhaseInc = phaseIncrements[notes[noteIndex] + 24];
+        oscillator1.setPhaseInc(currentPhaseInc);
+    }
+
     // consolidate this please <3
     oscillator1.wavetable1 = wavetables[controls->dropdowns[0]];
     oscillator1.wavetable2 = wavetables[controls->dropdowns[1]];

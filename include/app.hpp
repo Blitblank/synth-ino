@@ -47,6 +47,7 @@ private:
     // variables for sharing between classes that run on different tasks
     uint32_t scopeTrigger = 0;
     uint32_t scopeWavelength = 0;
+    uint8_t scopeBuffer[128] = { 16 };
     
     // member classes
     Disk disk;

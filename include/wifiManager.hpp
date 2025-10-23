@@ -20,7 +20,7 @@ public:
     //WifiManager(Disk* disk_);
     ~WifiManager() = default;
 
-    void init(Disk* disk, Adafruit_MCP23X17* io);
+    void init(Disk* disk, Adafruit_MCP23X17* io, uint8_t* scopeBuffer);
     void getControlState(ControlState* out);
     String getIp() { return ipAddress; }
     void pingClients() { ws.textAll("ping"); }
@@ -42,10 +42,12 @@ private:
 	bool wifiReady = false;
     uint32_t lastPingTime = 0;
     uint32_t pingInterval = 10000;
+    uint32_t lastScopeTime = 0;
     String ipAddress = "";
 
     // Shared state instance
     ControlState controlState;
+    uint8_t* scopeFrame;
 
     // Async server and websocket
     AsyncWebServer server{ 80 };

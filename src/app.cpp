@@ -49,19 +49,10 @@ void App::wifiTask() {
 
     utils::serialLog(wifiTaskHandle, xTaskGetTickCount(), "Wifi task start.");
 
-    wifiManager.init(&disk, &mcp);
+    wifiManager.init(&disk, &mcp, scopeBuffer);
     
-    const uint32_t pingInterval = 10000;
-
     while(1) {
-        vTaskDelay(1);
-
-        uint32_t lastTime = 0;
-        if (xTaskGetTickCount() - lastTime > pingInterval) {
-            //wifiManager.pingClients();
-            lastTime = millis();
-        }
-
+        vTaskDelay(500);
     }
 
 }
@@ -103,7 +94,7 @@ void App::ioTask() {
         while(spinlock1 != 0) vTaskDelay(1); // no mutex causes the flickering
 
         uint32_t start = xTaskGetTickCount(); // time profiling
-        oled.draw(i2sBuffer, i2sBufferLength, scopeWavelength, scopeTrigger);
+        oled.draw(i2sBuffer, i2sBufferLength, scopeWavelength, scopeTrigger, scopeBuffer);
         uint32_t end = xTaskGetTickCount();
 
         //Serial.printf("time diff of oled.draw: %d \n", end-start);

@@ -9,9 +9,10 @@ WifiManager::WifiManager() {
     controlState.sliders[4] = 0.5f;
 }
 
-void WifiManager::init(Disk* disk, Adafruit_MCP23X17* io) {
+void WifiManager::init(Disk* disk, Adafruit_MCP23X17* io, uint8_t* scopeBuffer) {
 
     mcp = io;
+    scopeFrame = scopeBuffer;
 
     setupEvents();
     WiFi.setAutoReconnect(true);
@@ -59,7 +60,7 @@ void WifiManager::handleWsEvent(AsyncWebSocket* serverPtr, AsyncWebSocketClient*
         }
         case WS_EVT_DISCONNECT: {
             Serial.printf("WS: client #%u disconnected\n", client->id());
-            mcp->digitalWrite(STATUS_LED_3, LOW);
+            if(ws.count() == 0) mcp->digitalWrite(STATUS_LED_3, LOW);
             break;
         }
         case WS_EVT_DATA: {
@@ -67,17 +68,19 @@ void WifiManager::handleWsEvent(AsyncWebSocket* serverPtr, AsyncWebSocketClient*
 
             if (info->final && info->index == 0 && info->len == len) { // full ws message
                 std::string payload((char*)data, len);
-                parsePayload(payload.c_str(), payload.size());
-            } 
-            else { // multi-frame message needs to be assembled
-                static std::string buffer;
-                if (info->index == 0) buffer.clear();
-                buffer.append((char*)data, len);
-                if (info->final) {
-                    parsePayload(buffer.c_str(), buffer.size());
-                    buffer.clear();
+                size_t semi = payload.find(';');
+                if (semi != std::string::npos) {
+                    parsePayload(payload.c_str(), payload.size());
                 }
-            }
+                // only happens when theres an active websocket, and occurs on the same timestep. 
+                // calling this from a loop in a task breaks the task because the library uses millis()
+                if((xTaskGetTickCount() - 50) > lastScopeTime) {
+                    ws.binaryAll(scopeFrame, 128);
+                    lastScopeTime = xTaskGetTickCount();
+                }
+                
+            } 
+
             break;
         }
         case WS_EVT_PONG: {
@@ -91,13 +94,8 @@ void WifiManager::handleWsEvent(AsyncWebSocket* serverPtr, AsyncWebSocketClient*
 void WifiManager::parsePayload(const char *payload, size_t len) {
 
     std::string s(payload, len);
-    // example payload: "50,50,50,50,50;1,2,3,4"
     size_t semi = s.find(';');
-    if (semi == std::string::npos) {
-        Serial.println(payload);
-        Serial.println("WS parse: no ';' found."); // payload malformed (i stole this)
-        return;
-    }
+    // example payload: "50,50,50,50,50;1,2,3,4"
     std::string s_part = s.substr(0, semi);
     std::string d_part = s.substr(semi + 1);
 

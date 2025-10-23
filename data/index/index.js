@@ -50,9 +50,9 @@ function initScope() {
 }
 
 function drawGrid(w, h) {
-    const bgColor = '#0e131bff';
-    const gridColor = '#212830ff';
-    const centerLineColor = '#242c3aff';
+    const bgColor = '#131313ff';
+    const gridColor = '#1f242bff'
+    const centerLineColor = '#4B4E6D';
 
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, w, h);
@@ -80,7 +80,7 @@ function drawGrid(w, h) {
 }
 
 function drawWave(samples) {
-    const traceColor = '#12ee54ff';
+    const traceColor = '#DCF763';
     const w = canvas.width;
     const h = canvas.height;
     drawGrid(w, h);

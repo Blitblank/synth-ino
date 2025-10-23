@@ -3,6 +3,8 @@ body {
     padding: 18px; display: flex; align-items: center; justify-content: center; flex-direction: column;
     font-family: "Roboto", sans-serif; font-optical-sizing: auto; font-weight: 600; font-style: normal; font-variation-settings: "wdth" 75;
     font-size: 16px;
+    background-color: #222222;
+    color: #E6FAFC;
 }
 
 .title { font-size: 24px; font-weight: 600; }
@@ -14,7 +16,20 @@ body {
 .slider-block .slider-label { width: 200px; text-align: right; }
 
 input[type="text"], input[type="number"] {
-    padding:6px 8px; border:1px solid #ccc; border-radius:6px; font-size:14px; width:40px; text-align: center;
+    padding:6px 8px; border:1px solid #000000; border-radius:6px; font-size:14px; width:50px; text-align: center; font-weight: 600;
+    background-color: #131313ff; color: #E6FAFC
+}
+
+#valueInput {
+    background-color: #1d151c; color: #E6FAFC
+}
+
+#stepInput {
+    background-color: #12131a;
+}
+
+input[type="range"] {
+    accent-color: #DCF763;
 }
 
 /* TODO: style dropdowns */

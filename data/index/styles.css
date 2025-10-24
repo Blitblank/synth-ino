@@ -1,9 +1,17 @@
 
+/* color theme from coolors.io
+--eerie-black: #222222ff;
+--azure-web: #e6fafcff;
+--ultra-violet: #4b4e6dff;
+--rose-quartz: #b796acff;
+--mindaro: #dcf763ff;
+*/
+
 body { 
     padding: 18px; display: flex; align-items: center; justify-content: center; flex-direction: column;
     font-family: "Roboto", sans-serif; font-optical-sizing: auto; font-weight: 600; font-style: normal; font-variation-settings: "wdth" 75;
     font-size: 16px;
-    background-color: #222222;
+    background-color: #222222ff;
     color: #E6FAFC;
 }
 
@@ -29,7 +37,7 @@ input[type="text"], input[type="number"] {
 }
 
 input[type="range"] {
-    accent-color: #DCF763;
+    accent-color: #dcf763ff;
 }
 
 /* TODO: style dropdowns */

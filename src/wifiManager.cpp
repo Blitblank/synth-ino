@@ -5,8 +5,8 @@ WifiManager::WifiManager() {
     // initialize control sate mainly
     for (int i = 0; i < 3; i++) controlState.sliders[i] = 0.0f;
     for (int i = 0; i < 4; i++) controlState.dropdowns[i] = 0;
-    controlState.sliders[3] = 0.5f;
-    controlState.sliders[4] = 0.5f;
+    controlState.sliders[3] = 12000.0f;
+    controlState.sliders[4] = 0.707f;
 }
 
 void WifiManager::init(Disk* disk, Adafruit_MCP23X17* io, uint8_t* scopeBuffer) {

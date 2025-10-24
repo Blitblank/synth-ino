@@ -6,6 +6,7 @@
 #include "Oscillator.hpp"
 #include "Filter.hpp"
 #include "WifiManager.hpp"
+#include "Envelope.hpp"
 
 #define MIDI_NOTE_MIN 0
 #define MIDI_NOTE_MAX 127
@@ -65,13 +66,15 @@ private:
     uint32_t sampleRate = 0;
     uint32_t bufferLength = 0; 
 
-    // TODO: note handler (midi handler, note sequencer, etc.)
-    // TODO: envelope generator 
-
     // very basic sequence, 
     uint8_t sequenceLength = 4;
     uint8_t notes[4] = {49, 44, 46, 42};
     uint32_t noteInterval = 2000; // ms
     uint8_t noteIndex = 0;
     uint32_t lastNoteTime = 0;
+    // TODO: needs more sophistication
+
+    Envelope amplitudeEnv {20, 200, 1.2f, 1000, 0.8f, 0.5f};
+    Envelope filterFreqEnv {100, 800, 3000.0f, 1000, 20000.0f, 0.5f};
+    Envelope filterResEnv {20, 280, 3.0f, 1000, 0.707f, 0.5f};
 };

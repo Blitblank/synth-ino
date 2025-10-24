@@ -81,12 +81,17 @@ void Synth::init() {
 void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWavelength, uint32_t* scopeTrigger, ControlState* controls) {
 
     // modify oscillator parameters based on the controls
-    // TODO: process control values in either payload parsing or in javascript
     uint32_t carrierInterpolation = (uint32_t)(controls->sliders[1] * (float)UINT32_MAX);
     uint32_t modulationDepth = (uint32_t)(controls->sliders[2] * (1 << (32-2)));
     float lpfCutoff = controls->sliders[3] + 0.1f;
     float lpfResonance = controls->sliders[4];
     // TODO: get rid of floating point operations because it bottlenecks to 24 bit precision
+
+    // TODO: here is where i forget the sliders and go off the envelopes
+    // the todo is to get rid of this 
+    lpfCutoff = filterFreqEnv.sample();
+    lpfResonance = filterResEnv.sample();
+    float amplitude = amplitudeEnv.sample();
     filter1.biquadCalculateLowpass(lpfCutoff, lpfResonance, (float)sampleRate);
 
     // this is just for a demo, remove when midi 
@@ -103,6 +108,9 @@ void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWave
             if(noteIndex >= sequenceLength) {
                 noteIndex = 0;
             }
+            amplitudeEnv.attack(96);
+            filterFreqEnv.attack(96);
+            filterResEnv.attack(96);
         }
         uint32_t currentPhaseInc = phaseIncrements[notes[noteIndex] + 24];
         oscillator1.setPhaseInc(currentPhaseInc);
@@ -145,6 +153,7 @@ void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWave
         // can chain together filters here
 
         // magic happens
+        //filteredSample = (int32_t)((float)filteredSample*amplitude);
         buffer[i] = filteredSample;
         //Serial.printf("%d ", filteredSample);
 

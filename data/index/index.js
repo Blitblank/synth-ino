@@ -34,6 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
+// TODO: move scope code into its own component
 function initScope() {
     if (!canvas) {
         console.error('Scope canvas not found:', canvasId);
@@ -107,9 +108,6 @@ function drawWave(samples) {
 
 }
 
-
-
-
 // package config data for a message
 function sendSliders() {
 
@@ -159,7 +157,7 @@ function initWebSocket() {
     };
 
     ws.onmessage = (msg) => {
-        console.log("WS message:", msg.data);
+        //console.log("WS message:", msg.data);
 
         // respond to ping from server
         if (msg.data === "ping") {

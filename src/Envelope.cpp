@@ -1,8 +1,8 @@
 
 #include "Envelope.hpp"
 
-Envelope::Envelope(uint32_t a, uint32_t d, float s, uint32_t r, float p, float v):
-    vAttack(a), vDecay(d), vSustain(s), vRelease(r), vPeak(p), velocityResponse(v) {
+Envelope::Envelope(uint32_t a, uint32_t d, float s, uint32_t r, float p, float v, bool log=false):
+    vAttack(a), vDecay(d), vSustain(s), vRelease(r), vPeak(p), velocityResponse(v), logarithmic(log) {
     
     attack(96);
 }
@@ -46,7 +46,7 @@ float Envelope::sample() {
         amplitude = (float)currentTime/(float)vAttack * vPeak * velocityFactor;
         break;
     }
-    case eDecay: {
+    case eDecay: { // TODO: logarithmic option (useful for filter frequency)
         float peak = vPeak * velocityFactor;
         float level = vSustain * velocityFactor;
         amplitude = (float)currentTime/(float)vDecay * (level - peak) + peak;

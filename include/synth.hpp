@@ -74,7 +74,7 @@ private:
     uint32_t lastNoteTime = 0;
     // TODO: needs more sophistication
 
-    Envelope amplitudeEnv {20, 200, 1.2f, 1000, 0.8f, 0.5f};
-    Envelope filterFreqEnv {100, 800, 3000.0f, 1000, 20000.0f, 0.5f};
-    Envelope filterResEnv {20, 280, 3.0f, 1000, 0.707f, 0.5f};
+    Envelope amplitudeEnv {20, 200, 1.4f, 1000, 0.9f, 0.5f};
+    Envelope filterFreqEnv {20, 1600, 2000.0f, 1000, 20000.0f, 0.5f};
+    Envelope filterResEnv {20, 40, 2.0f, 1000, 0.707f, 0.5f};
 };

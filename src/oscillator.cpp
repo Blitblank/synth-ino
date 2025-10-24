@@ -31,6 +31,7 @@ int32_t Oscillator::fsampleWavetable(const int32_t* wavetable, uint32_t x) {
     return wavetable[(x >> PHASE_PRECISION) & wavetableMask];
 
     // I want to see what this looks like graphed out as well as hearing the difference
+    // note: more presision is available here if the wavetable is larger
 }
 
 uint32_t Oscillator::floatToQ31(float f) {

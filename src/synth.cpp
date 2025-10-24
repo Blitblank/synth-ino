@@ -88,11 +88,13 @@ void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWave
     // TODO: get rid of floating point operations because it bottlenecks to 24 bit precision
 
     // TODO: here is where i forget the sliders and go off the envelopes
-    // the todo is to get rid of this 
+    // the to do is to get rid of this 
     lpfCutoff = filterFreqEnv.sample();
     lpfResonance = filterResEnv.sample();
     float amplitude = amplitudeEnv.sample();
     filter1.biquadCalculateLowpass(lpfCutoff, lpfResonance, (float)sampleRate);
+    // TODO: add option for filter frequency to be proportional to the base frequency 
+    // TODO: filter state reset on note change?
 
     // this is just for a demo, remove when midi 
     float freq = controls->sliders[0];
@@ -153,7 +155,7 @@ void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWave
         // can chain together filters here
 
         // magic happens
-        //filteredSample = (int32_t)((float)filteredSample*amplitude);
+        filteredSample = (int32_t)((float)filteredSample*amplitude);
         buffer[i] = filteredSample;
         //Serial.printf("%d ", filteredSample);
 

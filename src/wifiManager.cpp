@@ -176,9 +176,6 @@ void WifiManager::startWeb() {
         });
     server.addHandler(&ws);
 
-    // TODO: when the web client returns an error on accessing the websocket, it should send an http req to re-open it
-    // it can be an endpoint added here
-
     server.begin();
     Serial.println("Http server started.");
     active = true;

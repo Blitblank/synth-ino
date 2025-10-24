@@ -16,7 +16,7 @@ enum EnvelopeStage {
 class Envelope {
 public:
 
-    Envelope(uint32_t a, uint32_t d, float s, uint32_t r, float p, float v);
+    Envelope(uint32_t a, uint32_t d, float s, uint32_t r, float p, float v, bool log=false);
     ~Envelope() = default;
 
     void attack(uint8_t velocity);
@@ -36,11 +36,15 @@ private:
     // 100% sensitivity: 0 velocity -> 0% peak & sustain, 96 velocity -> 100% peak & sustain, 127 velocity -> 132%
     // 50% sensitivity: 0 velocity -> 50% peak & sustain, 96 velocity -> 100% peak & sustain, 127 velocity -> 116% peak & sustain
 
+    bool logarithmic = false; // logarithmic is best for frequency values
+    // TODO: this log option can be generalized to any kind of shape function (linear, quadratic, cubic, logarithmic, root, etc)
+
+    // timing
     uint32_t tickBegin = 0;
     uint32_t tickTimer = 0;
     uint8_t currentStage = eAttack;
     uint8_t velocity = 96;
 
-    const int8_t velocityCenter = 96;
+    const int8_t velocityCenter = 96; // depends on the midi controller really. avg is usually 80-100
 
 };

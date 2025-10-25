@@ -1,0 +1,31 @@
+
+smart-slider {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    margin: 8px;
+    gap: 10px;
+}
+smart-slider input{ width: 2; }
+smart-slider #slider { flex:0.2; height:20px; }
+smart-slider .slider-label { flex: 1; width: 200px; text-align: right; }
+
+input[type="text"], input[type="number"] {
+    padding:6px 8px; border:1px solid #000000; border-radius:6px; font-size:14px; width:50px; text-align: center; font-weight: 600;
+    background-color: #131313ff; color: #E6FAFC
+}
+
+#valueInput {
+    background-color: #1d151c; color: #E6FAFC
+}
+
+#stepInput {
+    background-color: #12131a;
+}
+
+input[type="range"] {
+    accent-color: #dcf763ff;
+}

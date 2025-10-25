@@ -12,9 +12,8 @@ let ctx;
 // create slider components out of divs
 document.addEventListener("DOMContentLoaded", () => {
 
-    document.querySelectorAll(".slider-block").forEach(el => {
-        slider = createSliderComponent(el, {min:el.getAttribute("min"), max:el.getAttribute("max"), value:el.getAttribute("value"), step:el.getAttribute("step")});
-        sliders.push(slider)
+    document.querySelectorAll("smart-slider").forEach(el => {
+        sliders.push(el)
     });
 
     //wsIndicator = document.createElement("div");
@@ -88,7 +87,8 @@ function drawWave(samples) {
 
     if (!samples) return;
 
-    xStep = w/128;
+    let xStep = w/128;
+    let 
     yStep = h/64;
 
     // draw trace
@@ -110,7 +110,6 @@ function drawWave(samples) {
 
 // package config data for a message
 function sendSliders() {
-
     let controlData = {
         "sliders": [
             sliders[0].value,
@@ -128,6 +127,9 @@ function sendSliders() {
     }
 
     let payload = JSON.stringify(controlData);
+
+    console.log(payload);
+
     ws.send(payload);
 
 }

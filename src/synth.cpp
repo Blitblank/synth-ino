@@ -67,7 +67,7 @@ void Synth::init() {
     initWavetables();
     initPhaseTable();
 
-    uint32_t midiNote = 60-1; // 69 = a4, 1=semitone
+    uint32_t midiNote = 40; // 69 = a4, 1=semitone
     double frequency = (double)(phaseIncrements[midiNote]) * (double)sampleRate / (double)(WAVETABLE_SIZE * (1 << PHASE_PRECISION)); // all in doubles because i dont care enough
     double wavelength_constant = 1.2; // oscilloscope displays this many periods (slightly more than one)
     wavelength = (uint32_t)((double)sampleRate * wavelength_constant / frequency + 0.5); // scope width
@@ -114,7 +114,7 @@ void Synth::generate(int32_t* buffer, uint32_t bufferLength, uint32_t* scopeWave
             filterFreqEnv.attack(96);
             filterResEnv.attack(96);
         }
-        uint32_t currentPhaseInc = phaseIncrements[notes[noteIndex] + 24];
+        uint32_t currentPhaseInc = phaseIncrements[notes[noteIndex]];
         oscillator1.setPhaseInc(currentPhaseInc);
     }
 

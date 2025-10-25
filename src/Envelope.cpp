@@ -1,7 +1,7 @@
 
 #include "Envelope.hpp"
 
-Envelope::Envelope(uint32_t a, uint32_t d, float s, uint32_t r, float p, float v, bool log=false):
+Envelope::Envelope(uint32_t a, uint32_t d, float s, uint32_t r, float p, float v, bool log):
     vAttack(a), vDecay(d), vSustain(s), vRelease(r), vPeak(p), velocityResponse(v), logarithmic(log) {
     
     attack(96);

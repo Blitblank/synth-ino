@@ -30,6 +30,7 @@ void Disk::getNetworks(std::vector<WifiNetwork>* networks) {
     File file = LittleFS.open(path, FILE_READ);
     if (!file) {
         Serial.println("networks file not found");
+        // TODO: error handling, right now it segfaults
     }
 
     while (file.available()) {

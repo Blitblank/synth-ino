@@ -1,6 +1,8 @@
 
 #include "WifiManager.hpp"
 
+#include "ArduinoJson.h"
+
 WifiManager::WifiManager() {
     // initialize control sate mainly
     for (int i = 0; i < 3; i++) controlState.sliders[i] = 0.0f;
@@ -67,10 +69,8 @@ void WifiManager::handleWsEvent(AsyncWebSocket* serverPtr, AsyncWebSocketClient*
             AwsFrameInfo *info = (AwsFrameInfo*)arg;
 
             if (info->final && info->index == 0 && info->len == len) { // full ws message
-                std::string payload((char*)data, len);
-                size_t semi = payload.find(';');
-                if (semi != std::string::npos) {
-                    parsePayload(payload.c_str(), payload.size());
+                if (data[0] == '{') { // this means the payload is prob a json. should maybe add a character key (say &=control data)
+                    parsePayload((const char*)data, len);
                 }
                 // only happens when theres an active websocket, and occurs on the same timestep. 
                 // calling this from a loop in a task breaks the task because the library uses millis()
@@ -90,62 +90,15 @@ void WifiManager::handleWsEvent(AsyncWebSocket* serverPtr, AsyncWebSocketClient*
     }
 }
 
-// TODO: i think having the payload be a json and using a json parsing library would make this a lot cleaner
 void WifiManager::parsePayload(const char *payload, size_t len) {
 
-    std::string s(payload, len);
-    size_t semi = s.find(';');
-    // example payload: "50,50,50,50,50;1,2,3,4"
-    std::string s_part = s.substr(0, semi);
-    std::string d_part = s.substr(semi + 1);
-
-    // parse sliders
-    float temp_sliders[5] = {0};
-    {
-        size_t pos = 0;
-        size_t idx = 0;
-        while (pos < s_part.size() && idx < 5) {
-            size_t comma = s_part.find(',', pos);
-            std::string token;
-            if (comma == std::string::npos) {
-                token = s_part.substr(pos);
-                pos = s_part.size();
-            } else {
-                token = s_part.substr(pos, comma - pos);
-                pos = comma + 1;
-            }
-            // try parse float
-            char *endptr = nullptr;
-            float v = strtof(token.c_str(), &endptr);
-            if (endptr == token.c_str()) {
-                v = 0.0f; // parse error
-            }
-            temp_sliders[idx++] = v;
-        }
+    StaticJsonDocument<200> controlsData;
+    if(deserializeJson(controlsData, payload)) {
+        return; // big fat failure
     }
 
-    // parse dropdowns
-    uint32_t temp_dd[4] = {0};
-    {
-        size_t pos = 0;
-        size_t idx = 0;
-        while (pos < d_part.size() && idx < 4) {
-            size_t comma = d_part.find(',', pos);
-            std::string token;
-            if (comma == std::string::npos) {
-                token = d_part.substr(pos);
-                pos = d_part.size();
-            } else {
-                token = d_part.substr(pos, comma - pos);
-                pos = comma + 1;
-            }
-            uint32_t v = (uint32_t)strtoul(token.c_str(), nullptr, 10);
-            temp_dd[idx++] = v;
-        }
-    }
-
-    for (int i = 0; i < 5; ++i) controlState.sliders[i] = temp_sliders[i];
-    for (int i = 0; i < 4; ++i) controlState.dropdowns[i] = temp_dd[i];
+    for (int i = 0; i < 5; ++i) controlState.sliders[i] = controlsData["sliders"][i];
+    for (int i = 0; i < 4; ++i) controlState.dropdowns[i] = controlsData["dropdowns"][i];
 
 }
 
